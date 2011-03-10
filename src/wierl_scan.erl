@@ -30,7 +30,7 @@
 %% POSSIBILITY OF SUCH DAMAGE.
 -module(wierl_scan).
 -export([
-        start/1,
+        start/0, start/1,
         format/1,
         decode/1
     ]).
@@ -47,6 +47,12 @@
 %% Open an unprivileged, datagram socket using
 %% procket
 %%
+start() ->
+    {ok, Devs} = inet:getifaddrs(),
+    [ begin
+                N = list_to_binary(Dev),
+                {N, start(N)}
+        end || {Dev,_} <- Devs ].
 
 start(Dev) when is_binary(Dev) ->
     {ok, Socket} = procket:socket(inet, dgram, 0),
@@ -54,20 +60,27 @@ start(Dev) when is_binary(Dev) ->
     procket:close(Socket),
     Result.
 
+
 %%
 %% Initiate the scan
 %%
-
 scan(Dev, Socket) when byte_size(Dev) < ?IFNAMSIZ ->
     Req = <<Dev/binary, 0:((?IFNAMSIZ - byte_size(Dev))*8), 0:(16*8)>>,
-    {ok, _Req} = procket:ioctl(Socket, ?SIOCSIWSCAN, Req),
-    result(Dev, Socket).
+    case procket:ioctl(Socket, ?SIOCSIWSCAN, Req) of
+        {ok, _Req} ->
+            result(Dev, Socket);
+        {error, ebusy} ->
+            timer:sleep(1000),
+            scan(Dev, Socket);
+        {error, _} = Error ->
+            Error
+    end.
+
 
 %%
 %% Retrieve the scan results by specifying a buffer for the
 %% kernel to return the results
 %%
-
 result(Dev, Socket) ->
     {ok, Req, [Res]} = procket:alloc([
             <<Dev/bytes, 0:( (?IFNAMSIZ - byte_size(Dev))*8)>>,
@@ -87,6 +100,7 @@ result(Dev, Socket) ->
         Error ->
             Error
     end.
+
 
 % The events are returned in the form: length, command, data
 % (length bytes)
