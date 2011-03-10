@@ -24,6 +24,26 @@ CAP\_NET\_ADMIN privileges:
     sudo setcap -r /path/to/beam
 
 
+## USAGE
+
+    wierl_scan:start(Interface) ->  AccessPoints
+
+        Types   AccessPoints = [AccessPoint]
+                AccessPoint = {BSSID, ScanInfo}
+                BSSID = binary()
+                ScanInfo = [Info]
+                Info = {Key, binary()}
+                Key = [ custom | encode | essid | freq | genie | mode |
+                    qual | rate ]
+
+    Initiate a wireless scan and return the scan list.
+
+    wierl_scan:format(AccessPoints) -> proplist()
+
+    Decode some of the binary data values returned in the list of
+    access points.
+
+
 ## TODO
 
 * put interfaces into monitor mode

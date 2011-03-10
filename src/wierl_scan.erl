@@ -29,14 +29,18 @@
 %% ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 %% POSSIBILITY OF SUCH DAMAGE.
 -module(wierl_scan).
--export([start/1]).
+-export([
+        start/1,
+        format/1,
+        decode/1
+    ]).
 
 -include("wierl_scan.hrl").
 
 -record(state, {
-    ap,
-    aps
-}).
+        ap,
+        aps
+    }).
 
 
 %%
@@ -66,10 +70,10 @@ scan(Dev, Socket) when byte_size(Dev) < ?IFNAMSIZ ->
 
 result(Dev, Socket) ->
     {ok, Req, [Res]} = procket:alloc([
-        <<Dev/bytes, 0:( (?IFNAMSIZ - byte_size(Dev))*8)>>,
-        {ptr, 4096},
-        <<4096:?UINT16, 0:?UINT16>>
-    ]),
+            <<Dev/bytes, 0:( (?IFNAMSIZ - byte_size(Dev))*8)>>,
+            {ptr, 4096},
+            <<4096:?UINT16, 0:?UINT16>>
+        ]),
     case procket:ioctl(Socket, ?SIOCGIWSCAN, Req) of
         {ok, <<_Ifname:16/bytes, _Ptr:?UINT32, Len:?UINT16, _Flag:?UINT16>>} ->
             {ok, <<Stream:Len/bytes, _/binary>>} = procket:buf(Res),
@@ -146,3 +150,47 @@ cmd(?IWEVGENIE) -> genie;
 cmd(?IWEVQUAL) -> qual;
 cmd(?IWEVCUSTOM) -> custom;
 cmd(Unknown) -> {unknown, Unknown}.
+
+mode(?IW_MODE_AUTO) -> auto;
+mode(?IW_MODE_ADHOC) -> adhoc;
+mode(?IW_MODE_INFRA) -> infra;
+mode(?IW_MODE_MASTER) -> master;
+mode(?IW_MODE_REPEAT) -> repeat;
+mode(?IW_MODE_SECOND) -> second;
+mode(?IW_MODE_MONITOR) -> monitor.
+
+
+% Pretty print the scan list
+format(Info) when is_list(Info) ->
+    [ {decode({bssid, N}), attr(L)} || {N,L} <- Info ].
+
+attr(Attr) ->
+    [ decode(N) || N <- Attr ].
+
+decode({Key, List}) when is_list(List) ->
+    {Key, [ decode({Key, N}) || N <- List ]};
+
+% What is 1?
+decode({essid, <<Len:?UINT16, 1:?UINT16, Bin/binary>>}) ->
+    <<ESSID:Len/bytes>> = Bin,
+    ESSID;
+decode({bssid, <<1,0, Bytes:6/bytes, 0,0,0,0,0,0,0,0>>}) ->
+    lists:flatten(string:join([ io_lib:format("~.16b", [N]) || <<N:8>> <= Bytes ], ":"));
+decode({mode, <<Mode:?UINT32>>}) ->
+    mode(Mode);
+decode({qual, <<Qual:8, Level:8/signed, Noise:8, Updated:8>>}) ->
+    [{quality, Qual}, {level, Level}, {noise, Noise}, {updated, decode({updated, Updated})}];
+
+decode({updated, Status}) when Status band ?IW_QUAL_QUAL_UPDATED == 1 ->
+    true;
+decode({updated, _Status}) ->
+    false;
+
+% How do we distinguish a channel from a frequency?
+decode({freq, <<Channel:?UINT64>>}) when Channel < 32 ->
+    {channel, Channel};
+decode({freq, <<Freq:?UINT64>>}) ->
+    {frequency, Freq};
+
+decode({_Key, Val}) ->
+    Val.

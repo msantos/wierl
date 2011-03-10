@@ -66,3 +66,15 @@
 -define(IWEVGENIE, 16#8C05).
 -define(IWEVQUAL, 16#8C01).
 -define(IWEVCUSTOM, 16#8C02).
+
+% Modes
+-define(IW_MODE_AUTO, 0).
+-define(IW_MODE_ADHOC, 1).
+-define(IW_MODE_INFRA, 2).
+-define(IW_MODE_MASTER, 3).
+-define(IW_MODE_REPEAT, 4).
+-define(IW_MODE_SECOND, 5).
+-define(IW_MODE_MONITOR, 6).
+
+% Quality
+-define(IW_QUAL_QUAL_UPDATED, 16#01).
