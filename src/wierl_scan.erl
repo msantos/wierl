@@ -33,6 +33,11 @@
 
 -include("wierl_scan.hrl").
 
+-record(state, {
+    ap,
+    aps
+}).
+
 
 %%
 %% Open an unprivileged, datagram socket using
@@ -41,8 +46,9 @@
 
 start(Dev) when is_binary(Dev) ->
     {ok, Socket} = procket:socket(inet, dgram, 0),
-    scan(Dev, Socket),
-    procket:close(Socket).
+    Result = scan(Dev, Socket),
+    procket:close(Socket),
+    Result.
 
 %%
 %% Initiate the scan
@@ -83,13 +89,32 @@ result(Dev, Socket) ->
 % 
 % We believe the length returned in the packet and print out
 % the binary data. If the length is wrong, we'll just crash.
-event(<<>>) ->
-    ok;
-event(<<Len:?UINT16, Cmd:?UINT16, Bin/binary>>) ->
-    EventLen = Len - 4,
-    <<Event:EventLen/bytes, Rest/binary>> = Bin,
-    io:format("~p:~p~n", [cmd(Cmd), Event]),
-    event(Rest).
+event(Buf) ->
+    event(Buf, #state{
+            aps = gb_trees:empty()
+        }).
+
+event(<<>>, #state{aps = APs}) ->
+    [ {AP, orddict:to_list(N)} || {AP, N} <- gb_trees:to_list(APs) ];
+event(<<EventLen:?UINT16, Cmd:?UINT16, Buf/binary>>, #state{ap = AP, aps = APs}) ->
+    Len = EventLen - 4,
+    <<Event:Len/bytes, Rest/binary>> = Buf,
+
+    case cmd(Cmd) of
+        ap ->
+            event(Rest, #state{
+                    ap = Event,
+                    aps = gb_trees:enter(Event, orddict:new(), APs)
+                });
+        Type ->
+            Info = gb_trees:get(AP, APs),
+            Info1 = orddict:append(Type, Event, Info),
+            event(Rest, #state{
+                    ap = AP,
+                    aps = gb_trees:enter(AP, Info1, APs)
+                })
+    end.
+
 
 % Convert the integer command values to almost human readable atoms
 cmd(?SIOCGIWNAME) -> name;
@@ -102,7 +127,7 @@ cmd(?SIOCGIWPRIV) -> priv;
 cmd(?SIOCGIWSTATS) -> stats;
 cmd(?SIOCGIWSPY) -> spy;
 cmd(?SIOCGIWTHRSPY) -> thrspy;
-cmd(?SIOCGIWAP) -> bssid;
+cmd(?SIOCGIWAP) -> ap;
 cmd(?SIOCGIWAPLIST) -> aplist;
 cmd(?SIOCGIWESSID) -> essid;
 cmd(?SIOCGIWNICKN) -> nickn;
