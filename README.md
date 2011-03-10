@@ -26,15 +26,19 @@ CAP\_NET\_ADMIN privileges:
 
 ## USAGE
 
+    wierl_scan:start() ->  [{Interface, AccessPoints}]
     wierl_scan:start(Interface) ->  AccessPoints
+    wierl_scan:start(Interface, Options) ->  AccessPoints
 
-        Types   AccessPoints = [AccessPoint]
+        Types   Interface = binary()
+                AccessPoints = [AccessPoint]
                 AccessPoint = {BSSID, ScanInfo}
                 BSSID = binary()
                 ScanInfo = [Info]
                 Info = {Key, binary()}
                 Key = [ custom | encode | essid | freq | genie | mode |
                     qual | rate ]
+                Options = [{essid, binary()}]
 
     Initiate a wireless scan and return the scan list.
 
@@ -45,6 +49,8 @@ CAP\_NET\_ADMIN privileges:
 
 
 ## TODO
+
+* convert to gen_fsm/gen_server
 
 * put interfaces into monitor mode
 

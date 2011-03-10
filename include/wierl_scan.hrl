@@ -36,6 +36,12 @@
 -define(SIOCSIWSCAN, 16#8B18).  % Trigger a scan
 -define(SIOCGIWSCAN, 16#8B19).  % Retrieve the scan results
 
+% Scan a specific ESSID
+-define(ARPHRD_ETHER, 1).
+-define(IW_ESSID_MAX_SIZE, 32).
+-define(IW_MAX_FREQUENCIES, 32).
+-define(IW_SCAN_THIS_ESSID, 16#0002).
+
 % Event types
 -define(SIOCGIWAP, 16#8B15).
 -define(SIOCGIWAPLIST, 16#8B17).

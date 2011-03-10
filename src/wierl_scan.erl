@@ -30,7 +30,7 @@
 %% POSSIBILITY OF SUCH DAMAGE.
 -module(wierl_scan).
 -export([
-        start/0, start/1,
+        start/0, start/1, start/2,
         format/1,
         decode/1
     ]).
@@ -54,9 +54,13 @@ start() ->
                 {N, start(N)}
         end || {Dev,_} <- Devs ].
 
-start(Dev) when is_binary(Dev) ->
+start(Dev) ->
+    start(Dev, []).
+
+start(Dev, Opt) when is_binary(Dev), is_list(Opt) ->
+    ESSID = proplists:get_value(essid, Opt),
     {ok, Socket} = procket:socket(inet, dgram, 0),
-    Result = scan(Dev, Socket),
+    Result = scan(Dev, Socket, ESSID),
     procket:close(Socket),
     Result.
 
@@ -64,14 +68,14 @@ start(Dev) when is_binary(Dev) ->
 %%
 %% Initiate the scan
 %%
-scan(Dev, Socket) when byte_size(Dev) < ?IFNAMSIZ ->
-    Req = <<Dev/binary, 0:((?IFNAMSIZ - byte_size(Dev))*8), 0:(16*8)>>,
+scan(Dev, Socket, ESSID) when byte_size(Dev) < ?IFNAMSIZ ->
+    Req = essid(Dev, ESSID),
     case procket:ioctl(Socket, ?SIOCSIWSCAN, Req) of
         {ok, _Req} ->
             result(Dev, Socket);
         {error, ebusy} ->
             timer:sleep(1000),
-            scan(Dev, Socket);
+            scan(Dev, Socket, ESSID);
         {error, _} = Error ->
             Error
     end.
@@ -100,6 +104,49 @@ result(Dev, Socket) ->
         Error ->
             Error
     end.
+
+
+essid(Dev, undefined) ->
+    <<Dev/binary, 0:((?IFNAMSIZ - byte_size(Dev))*8), 0:(16*8)>>;
+essid(Dev, ESSID) when is_binary(ESSID), byte_size(ESSID) < ?IW_ESSID_MAX_SIZE ->
+    Len = byte_size(ESSID),
+
+    ScanReq = <<
+    0:8,                        % scan_type: IW_SCAN_TYPE_ACTIVE
+    Len:8,                      % essid_len
+    0:8,                        % num entries in channel list: scan all
+    0:8,                        % flags: unused
+
+    % struct sockaddr bssid
+    ?ARPHRD_ETHER:16/native,    % family
+    255,255,255,255,255,255,    % sa_data: ff:ff:ff:ff:ff:ff
+    0:64,                       % sa_data: zero remainder
+
+    ESSID/bytes, 0:((?IW_ESSID_MAX_SIZE - Len)*8),
+
+    0:32/native,                % min_channel_time: use defaults
+    0:32/native                 % max_channel_time: use defaults
+    >>,
+
+    Freq = binary:copy(<<
+        % struct iw_freq channel_list[IW_MAX_FREQUENCIES]
+        0:32/native,                % mantissa
+        0:16/native,                % exponent
+        0:8,                        % list index
+        0:8                         % flags
+        >>, 32),
+
+    Struct = list_to_binary([ScanReq, Freq]),
+
+    % XXX This is probably dangerous. Since we throw away the
+    % XXX return value of the resource, the garbage collector
+    % XXX may destroy the resource and free the buffer.
+    {ok, Req, [_Res]} = procket:alloc([
+        <<Dev/bytes, 0:( (?IFNAMSIZ - byte_size(Dev))*8)>>,
+        {ptr, Struct},
+        <<(byte_size(Struct)):?UINT16, ?IW_SCAN_THIS_ESSID:?UINT16>>
+    ]),
+    Req.
 
 
 % The events are returned in the form: length, command, data
