@@ -18,7 +18,7 @@ CAP\_NET\_ADMIN privileges:
 
     ./start.sh
     % Scan using the "wlan0" interface 
-    wierl_scan:start(<<"wlan0">>).
+    wierl_scan:list(<<"wlan0">>).
 
     # If you want to remove the privs
     sudo setcap -r /path/to/beam
@@ -26,9 +26,9 @@ CAP\_NET\_ADMIN privileges:
 
 ## USAGE
 
-    wierl_scan:start() ->  [{Interface, AccessPoints}]
-    wierl_scan:start(Interface) ->  AccessPoints
-    wierl_scan:start(Interface, Options) ->  AccessPoints
+    wierl_scan:list() ->  [{Interface, AccessPoints}]
+    wierl_scan:list(Interface) ->  AccessPoints
+    wierl_scan:list(Interface, Options) ->  AccessPoints
 
         Types   Interface = binary()
                 AccessPoints = [AccessPoint]

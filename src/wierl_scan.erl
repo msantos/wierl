@@ -30,7 +30,7 @@
 %% POSSIBILITY OF SUCH DAMAGE.
 -module(wierl_scan).
 -export([
-        start/0, start/1, start/2,
+        list/0, list/1, list/2,
         format/1,
         decode/1
     ]).
@@ -47,20 +47,20 @@
 %% Open an unprivileged, datagram socket using
 %% procket
 %%
-start() ->
+list() ->
     {ok, Devs} = inet:getifaddrs(),
     [ begin
                 N = list_to_binary(Dev),
-                {N, start(N)}
+                {N, list(N)}
         end || {Dev,_} <- Devs ].
 
-start(Dev) ->
-    start(Dev, []).
+list(Dev) ->
+    list(Dev, []).
 
-start(Dev, Opt) when is_binary(Dev), is_list(Opt) ->
+list(Dev, Opt) when is_binary(Dev), is_list(Opt) ->
     ESSID = proplists:get_value(essid, Opt),
     {ok, Socket} = procket:socket(inet, dgram, 0),
-    Result = scan(Dev, Socket, ESSID),
+    Result = scan(Socket, Dev, ESSID),
     procket:close(Socket),
     Result.
 
@@ -68,14 +68,14 @@ start(Dev, Opt) when is_binary(Dev), is_list(Opt) ->
 %%
 %% Initiate the scan
 %%
-scan(Dev, Socket, ESSID) when byte_size(Dev) < ?IFNAMSIZ ->
+scan(Socket, Dev, ESSID) when byte_size(Dev) < ?IFNAMSIZ ->
     Req = essid(Dev, ESSID),
     case procket:ioctl(Socket, ?SIOCSIWSCAN, Req) of
         {ok, _Req} ->
-            result(Dev, Socket);
+            ap(Socket, Dev);
         {error, ebusy} ->
             timer:sleep(1000),
-            scan(Dev, Socket, ESSID);
+            scan(Socket, Dev, ESSID);
         {error, _} = Error ->
             Error
     end.
@@ -85,7 +85,7 @@ scan(Dev, Socket, ESSID) when byte_size(Dev) < ?IFNAMSIZ ->
 %% Retrieve the scan results by specifying a buffer for the
 %% kernel to return the results
 %%
-result(Dev, Socket) ->
+ap(Socket, Dev) ->
     {ok, Req, [Res]} = procket:alloc([
             <<Dev/bytes, 0:( (?IFNAMSIZ - byte_size(Dev))*8)>>,
             {ptr, 4096},
@@ -99,7 +99,7 @@ result(Dev, Socket) ->
         % Poll the socket for the results
         {error, eagain} ->
             timer:sleep(1000),
-            result(Dev, Socket);
+            ap(Socket, Dev);
 
         Error ->
             Error
