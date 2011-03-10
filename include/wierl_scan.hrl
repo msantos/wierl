@@ -32,6 +32,9 @@
 -define(UINT32, 4/native-unsigned-integer-unit:8).
 -define(UINT64, 8/native-unsigned-integer-unit:8).
 
+-define(INT16, 2/native-signed-integer-unit:8).
+-define(INT32, 4/native-signed-integer-unit:8).
+
 -define(IFNAMSIZ, 16).
 -define(SIOCSIWSCAN, 16#8B18).  % Trigger a scan
 -define(SIOCGIWSCAN, 16#8B19).  % Retrieve the scan results

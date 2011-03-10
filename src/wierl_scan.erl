@@ -247,11 +247,10 @@ decode({updated, Status}) when Status band ?IW_QUAL_QUAL_UPDATED == 1 ->
 decode({updated, _Status}) ->
     false;
 
-% How do we distinguish a channel from a frequency?
-decode({freq, <<Channel:?UINT64>>}) when Channel < 32 ->
+decode({freq, <<Channel:?UINT64>>}) when Channel < 1000 ->
     {channel, Channel};
-decode({freq, <<Freq:?UINT64>>}) ->
-    {frequency, Freq};
+decode({freq, <<M:?INT32, E:?INT16, _I:8, _Flags:8>>}) ->
+    {frequency, M*math:pow(10, E)};
 
 decode({_Key, Val}) ->
     Val.
