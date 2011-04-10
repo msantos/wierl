@@ -51,8 +51,17 @@ close(Socket) ->
 attr(Dev) when is_binary(Dev) ->
     {ok, Socket} = open(),
 
-    Name = info(Socket, Dev, ?SIOCGIWNAME),
-    attr_1(Socket, Dev, Name).
+    Attr = case info(Socket, Dev, ?SIOCGIWNAME) of
+        <<>> ->
+            {error, enotsup};
+        Name ->
+            [{name, Name}] ++
+            [ {N, attr(Socket, Dev, N)} || N <-
+                [nwid, freq, mode, essid,
+                    encode, range, ap, rate, power] ]
+        end,
+    close(Socket),
+    Attr.
 
 %%
 %% Retreive wireless setting
@@ -75,37 +84,6 @@ attr(Socket, Dev, {Key, Val}) when is_binary(Val); is_integer(Val) ->
 
 attr(_Socket, _Dev, {_Key, _Value}) ->
     {error, unsupported}.
-
-
-attr_1(Socket, _Dev, <<>>) ->
-    procket:close(Socket),
-    {error, enotsup};
-attr_1(Socket, Dev, Name) ->
-    NWID = attr(Socket, Dev, nwid),
-    Freq = attr(Socket, Dev, freq),
-    Mode = attr(Socket, Dev, mode),
-    ESSID = attr(Socket, Dev, essid),
-    Encode = attr(Socket, Dev, encode),
-    Range = attr(Socket, Dev, range),
-    AP = attr(Socket, Dev, ap),
-    Rate = attr(Socket, Dev, rate),
-    Power = attr(Socket, Dev, power),
-
-    close(Socket),
-
-    [
-        {name, Name},
-        {nwid, NWID},
-        {freq, Freq},
-        {mode, Mode},
-        {encode, Encode},
-        {essid, ESSID},
-        {range, Range},
-        {ap, AP},
-        {rate, Rate},
-        {power, Power}
-    ].
-
 
 
 %%
