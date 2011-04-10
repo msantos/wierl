@@ -99,8 +99,11 @@ info(Socket, Dev, Req) ->
     case procket:ioctl(Socket, Req, Struct) of
         {ok, <<Dev:Len/bytes, 0:Bits, Value/binary>>} ->
             Value;
-        {error, _} ->
-            <<>>
+        % XXX Ignore unsupported attributes
+        {error, enotsup} ->
+            <<>>;
+        {error, _} = Error ->
+            Error
     end.
 
 
@@ -126,8 +129,8 @@ info(Socket, Dev, Req, Alloc) ->
         {ok, <<Dev:Len/bytes, 0:Bits, _Ptr:?UINT32, ValLen:?UINT16, _Flag:?UINT16>>} ->
             {ok, <<Val:ValLen/bytes, _/binary>>} = procket:buf(Res),
             Val;
-        {error, _} ->
-            <<>>
+        {error, _} = Error ->
+            Error
     end.
 
 

@@ -39,11 +39,33 @@
 -define(SIOCSIWSCAN, 16#8B18).  % Trigger a scan
 -define(SIOCGIWSCAN, 16#8B19).  % Retrieve the scan results
 
+-define(IW_MAX_BITRATES, 32).
+-define(IW_MAX_ENCODING_SIZES, 8).
+-define(IW_MAX_TXPOWER, 8).
+-define(IW_ENCODING_TOKEN_MAX, 64).
+
 % Scan a specific ESSID
 -define(ARPHRD_ETHER, 1).
 -define(IW_ESSID_MAX_SIZE, 32).
 -define(IW_MAX_FREQUENCIES, 32).
 -define(IW_SCAN_THIS_ESSID, 16#0002).
+
+
+-define(IW_POWER_ON, 16#0000).
+-define(IW_POWER_TYPE, 16#F000).
+-define(IW_POWER_PERIOD, 16#1000).
+-define(IW_POWER_TIMEOUT, 16#2000).
+-define(IW_POWER_SAVING, 16#4000).
+-define(IW_POWER_MODE, 16#0F00).
+-define(IW_POWER_UNICAST_R, 16#0100).
+-define(IW_POWER_MULTICAST_R, 16#0200).
+-define(IW_POWER_ALL_R, 16#0300).
+-define(IW_POWER_FORCE_S, 16#0400).
+-define(IW_POWER_REPEATER, 16#0800).
+-define(IW_POWER_MODIFIER, 16#000F).
+-define(IW_POWER_MIN, 16#0001).
+-define(IW_POWER_MAX, 16#0002).
+-define(IW_POWER_RELATIVE, 16#0004).
 
 % Event types
 -define(SIOCGIWAP, 16#8B15).
@@ -87,8 +109,6 @@
 
 % Quality
 -define(IW_QUAL_QUAL_UPDATED, 16#01).
-
--define(IW_ENCODING_TOKEN_MAX, 64).
 
 -define(SIOCSIWESSID, 16#8B1A).
 -define(SIOCSIWMODE, 16#8B06).

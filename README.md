@@ -42,7 +42,7 @@ CAP\_NET\_ADMIN privileges:
 
     Initiate a wireless scan and return the scan list.
 
-    wierl_scan:format(AccessPoints) -> proplist()
+    wierl:format(AccessPoints) -> proplist()
 
     Decode some of the binary data values returned in the list of
     access points.
