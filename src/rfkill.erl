@@ -105,7 +105,7 @@ event(<<Idx:4/native-unsigned-integer-unit:8,
     }.
 
 list() ->
-    {ok, FD} = procket:open(0, [{dev, "rfkill"}]),
+    {ok, FD} = procket:dev("rfkill"),
     Res = list_1(FD),
     ok = procket:close(FD),
     Res.
@@ -128,7 +128,7 @@ list_1(FD) ->
 
 
 write(Event) when is_binary(Event) ->
-    {ok, FD} = procket:open(0, [{dev, "rfkill"}]),
+    {ok, FD} = procket:dev("rfkill"),
     ok = procket:write(FD, Event),
     ok = procket:close(FD),
     ok.
