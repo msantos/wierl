@@ -5,7 +5,8 @@
     {modules, [
         wierl,
         wierl_scan,
-        wierl_config
+        wierl_config,
+        rfkill
             ]},
     {registered, []},
     {applications, [
