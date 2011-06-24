@@ -92,9 +92,12 @@ param(_Socket, _Dev, {_Key, _Value}) ->
 
 %% null buffer
 ioctl(Socket, Dev, Req) ->
+    ioctl(Socket, Dev, Req, <<0:(16*8)>>).
+
+ioctl(Socket, Dev, Req, Buf) ->
     Len = byte_size(Dev),
     Bits = (?IFNAMSIZ - Len) * 8,
-    Struct = <<Dev/binary, 0:((?IFNAMSIZ - byte_size(Dev))*8), 0:(16*8)>>,
+    Struct = <<Dev/binary, 0:((?IFNAMSIZ - byte_size(Dev))*8), Buf/binary>>,
 
     case procket:ioctl(Socket, Req, Struct) of
         {ok, <<Dev:Len/bytes, 0:Bits, Value/binary>>} ->
