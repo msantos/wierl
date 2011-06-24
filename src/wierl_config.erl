@@ -155,6 +155,3 @@ set(encode) -> ?SIOCSIWENCODE;
 set(key) -> ?SIOCSIWENCODE;
 set(power) -> ?SIOCSIWPOWER;
 set(commit) -> ?SIOCSIWCOMMIT.
-
-arg(on) -> 1;
-arg(off) -> 0.
