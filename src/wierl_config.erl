@@ -51,7 +51,7 @@ close(Socket) ->
 attr(Dev) when is_binary(Dev) ->
     {ok, Socket} = open(),
 
-    Attr = case info(Socket, Dev, ?SIOCGIWNAME) of
+    Attr = case ioctl(Socket, Dev, ?SIOCGIWNAME) of
         <<>> ->
             {error, enotsup};
         Name ->
@@ -67,20 +67,20 @@ attr(Dev) when is_binary(Dev) ->
 %% Retreive wireless setting
 %%
 attr(Socket, Dev, essid) ->
-    info(Socket, Dev, ?SIOCGIWESSID, ?IW_ESSID_MAX_SIZE+2);
+    ioctl_buf(Socket, Dev, ?SIOCGIWESSID, ?IW_ESSID_MAX_SIZE+2);
 attr(Socket, Dev, encode) ->
-    info(Socket, Dev, ?SIOCGIWENCODE, ?IW_ENCODING_TOKEN_MAX);
+    ioctl_buf(Socket, Dev, ?SIOCGIWENCODE, ?IW_ENCODING_TOKEN_MAX);
 attr(Socket, Dev, range) ->
     % wireless-tools uses sizeof(iwrange)*2
-    info(Socket, Dev, ?SIOCGIWRANGE, 1024);
+    ioctl_buf(Socket, Dev, ?SIOCGIWRANGE, 1024);
 attr(Socket, Dev, Key) when is_atom(Key) ->
-    info(Socket, Dev, req(Key));
+    ioctl(Socket, Dev, req(Key));
 
 %%
 %% Change wireless setting
 %%
 attr(Socket, Dev, {Key, Val}) when is_binary(Val); is_integer(Val) ->
-    info(Socket, Dev, set(Key), Val);
+    ioctl_buf(Socket, Dev, set(Key), Val);
 
 attr(_Socket, _Dev, {_Key, _Value}) ->
     {error, unsupported}.
@@ -91,7 +91,7 @@ attr(_Socket, _Dev, {_Key, _Value}) ->
 %%
 
 %% null buffer
-info(Socket, Dev, Req) ->
+ioctl(Socket, Dev, Req) ->
     Len = byte_size(Dev),
     Bits = (?IFNAMSIZ - Len) * 8,
     Struct = <<Dev/binary, 0:((?IFNAMSIZ - byte_size(Dev))*8), 0:(16*8)>>,
@@ -110,7 +110,7 @@ info(Socket, Dev, Req) ->
 %%
 %% ioctl with a dynamic buffer
 %%
-info(Socket, Dev, Req, Alloc) ->
+ioctl_buf(Socket, Dev, Req, Alloc) ->
     ReqLen = if
         is_binary(Alloc) -> byte_size(Alloc);
         is_integer(Alloc) -> Alloc
