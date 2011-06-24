@@ -96,11 +96,11 @@ ioctl(Socket, Dev, Req) ->
 
 ioctl(Socket, Dev, Req, Buf) ->
     Len = byte_size(Dev),
-    Bits = (?IFNAMSIZ - Len) * 8,
-    Struct = <<Dev/binary, 0:((?IFNAMSIZ - byte_size(Dev))*8), Buf/binary>>,
+    Bits = (?IFNAMSIZ - Len - 1) * 8,
+    Struct = <<Dev/binary, 0:Bits, 0, Buf/binary>>,
 
     case procket:ioctl(Socket, Req, Struct) of
-        {ok, <<Dev:Len/bytes, 0:Bits, Value/binary>>} ->
+        {ok, <<Dev:Len/bytes, 0:Bits, 0, Value/binary>>} ->
             Value;
         % XXX Ignore unsupported parameters
         {error, enotsup} ->
@@ -120,16 +120,16 @@ ioctl_buf(Socket, Dev, Req, Alloc) ->
     end,
 
     Len = byte_size(Dev),
-    Bits = (?IFNAMSIZ - Len) * 8,
+    Bits = (?IFNAMSIZ - Len - 1) * 8,
 
     {ok, Struct, [Res]} = procket:alloc([
-            <<Dev/bytes, 0:( (?IFNAMSIZ - byte_size(Dev))*8)>>,
+            <<Dev/bytes, 0:Bits, 0>>,
             {ptr, Alloc},
             <<ReqLen:?UINT16, ?FLAGS:?UINT16>>
         ]),
 
     case procket:ioctl(Socket, Req, Struct) of
-        {ok, <<Dev:Len/bytes, 0:Bits, _Ptr:?UINT32, ValLen:?UINT16, _Flag:?UINT16>>} ->
+        {ok, <<Dev:Len/bytes, 0:Bits, 0, _Ptr:?UINT32, ValLen:?UINT16, _Flag:?UINT16>>} ->
             {ok, <<Val:ValLen/bytes, _/binary>>} = procket:buf(Res),
             Val;
         {error, _} = Error ->
