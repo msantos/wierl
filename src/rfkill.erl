@@ -65,7 +65,7 @@
 %%     __u8  op;
 %%     __u8  soft, hard;
 %% } __packed;
--record(event, {
+-record(rfkill_event, {
         idx = 0,
         type = 0,
         op = 0,
@@ -96,7 +96,7 @@ event(<<Idx:4/native-unsigned-integer-unit:8,
     Op:8,
     Soft:8,
     Hard:8>>) ->
-    #event{
+    #rfkill_event{
         idx = Idx,
         type = Type,
         op = Op,
@@ -113,18 +113,25 @@ list() ->
 list_1(FD) ->
     {ok, Data} = procket:read(FD, 8),
 
-    Event = case event(Data) of
-        #event{op = ?RFKILL_OP_ADD} = E ->
-            E;
-        _ -> % XXX not tail recursive
-            list_1(FD)
-    end,
+    case event(Data) of
+        #rfkill_event{
+            op = ?RFKILL_OP_ADD,
 
-    {event, [{idx, Event#event.idx},
-            {type, Event#event.type},
-            {op, Event#event.op},
-            {soft, Event#event.soft},
-            {hard, Event#event.hard}]}.
+            idx = Idx,
+            type = Type,
+            soft = Soft,
+            hard = Hard
+        } ->
+            {rfkill_event, [
+                {idx, Idx},
+                {type, Type},
+                {op, ?RFKILL_OP_ADD},
+                {soft, Soft},
+                {hard, Hard}
+            ]};
+        _ ->
+            list_1(FD)
+    end.
 
 
 write(Event) when is_binary(Event) ->
