@@ -79,7 +79,10 @@ param(Socket, Dev, Key) when is_atom(Key) ->
 %%
 %% Change wireless setting
 %%
-param(Socket, Dev, {Key, Val}) when is_binary(Val); is_integer(Val) ->
+param(Socket, Dev, {Key, Val}) when is_atom(Key), is_integer(Val) ->
+    Struct = <<Val:?UINT32, 0:(12*8)>>,
+    ioctl(Socket, Dev, set(Key), Struct);
+param(Socket, Dev, {Key, Val}) when is_atom(Key), is_binary(Val) ->
     ioctl_buf(Socket, Dev, set(Key), Val);
 
 param(_Socket, _Dev, {_Key, _Value}) ->
