@@ -177,5 +177,3 @@ event(<<EventLen:?UINT16, Cmd:?UINT16, Buf/binary>>, #state{ap = AP, aps = APs})
                     aps = gb_trees:enter(AP, Info1, APs)
                 })
     end.
-
-
