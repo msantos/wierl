@@ -160,4 +160,5 @@ set(rate) -> ?SIOCSIWRATE;
 set(encode) -> ?SIOCSIWENCODE;
 set(key) -> ?SIOCSIWENCODE;
 set(power) -> ?SIOCSIWPOWER;
+set(name) -> set(commit);
 set(commit) -> ?SIOCSIWCOMMIT.
