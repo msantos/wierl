@@ -30,7 +30,7 @@
 %% POSSIBILITY OF SUCH DAMAGE.
 -module(wierl_config).
 -export([
-        attr/1, attr/3,
+        param/1, param/3,
         open/0, close/1
     ]).
 
@@ -48,7 +48,7 @@ close(Socket) ->
 %%
 %% Retrieve all wireless parameters
 %%
-attr(Dev) when is_binary(Dev) ->
+param(Dev) when is_binary(Dev) ->
     {ok, Socket} = open(),
 
     Attr = case ioctl(Socket, Dev, ?SIOCGIWNAME) of
@@ -56,7 +56,7 @@ attr(Dev) when is_binary(Dev) ->
             {error, enotsup};
         Name ->
             [{name, Name}] ++
-            [ {N, attr(Socket, Dev, N)} || N <-
+            [ {N, param(Socket, Dev, N)} || N <-
                 [nwid, freq, mode, essid,
                     encode, range, ap, rate, power] ]
         end,
@@ -66,23 +66,23 @@ attr(Dev) when is_binary(Dev) ->
 %%
 %% Retreive wireless setting
 %%
-attr(Socket, Dev, essid) ->
+param(Socket, Dev, essid) ->
     ioctl_buf(Socket, Dev, ?SIOCGIWESSID, ?IW_ESSID_MAX_SIZE+2);
-attr(Socket, Dev, encode) ->
+param(Socket, Dev, encode) ->
     ioctl_buf(Socket, Dev, ?SIOCGIWENCODE, ?IW_ENCODING_TOKEN_MAX);
-attr(Socket, Dev, range) ->
+param(Socket, Dev, range) ->
     % wireless-tools uses sizeof(iwrange)*2
     ioctl_buf(Socket, Dev, ?SIOCGIWRANGE, 1024);
-attr(Socket, Dev, Key) when is_atom(Key) ->
+param(Socket, Dev, Key) when is_atom(Key) ->
     ioctl(Socket, Dev, req(Key));
 
 %%
 %% Change wireless setting
 %%
-attr(Socket, Dev, {Key, Val}) when is_binary(Val); is_integer(Val) ->
+param(Socket, Dev, {Key, Val}) when is_binary(Val); is_integer(Val) ->
     ioctl_buf(Socket, Dev, set(Key), Val);
 
-attr(_Socket, _Dev, {_Key, _Value}) ->
+param(_Socket, _Dev, {_Key, _Value}) ->
     {error, unsupported}.
 
 
@@ -99,7 +99,7 @@ ioctl(Socket, Dev, Req) ->
     case procket:ioctl(Socket, Req, Struct) of
         {ok, <<Dev:Len/bytes, 0:Bits, Value/binary>>} ->
             Value;
-        % XXX Ignore unsupported attributes
+        % XXX Ignore unsupported parameters
         {error, enotsup} ->
             <<>>;
         {error, _} = Error ->
