@@ -38,8 +38,14 @@ CAP\_NET\_ADMIN privileges:
                 BSSID = binary()
                 ScanInfo = [Info]
                 Info = {Key, binary()}
-                Key = [ custom | encode | essid | freq | genie | mode |
-                    qual | rate ]
+                Key = custom
+                    | encode
+                    | essid
+                    | freq
+                    | genie
+                    | mode
+                    | qual
+                    | rate
                 Options = [{essid, binary()}]
 
     Initiate a wireless scan and return the scan list.
@@ -52,20 +58,34 @@ CAP\_NET\_ADMIN privileges:
 ### wierl_config
 
     param(Ifname) -> Parameters
-    param(Socket, Ifname, Attr) -> [binary() | {error, unsupported} |
-        {error, posix()}]
+    param(Socket, Ifname, Attr) -> binary() | {error, unsupported}
+            | {error, posix()}
 
         Types   Ifname = binary()
                 Socket = int()
-                Attr = [{Key,Value}|Key]
-                Key = [name | nwid | freq | mode | essid | encode | range |
-                    ap | rate | power]
-                Value = [binary() | integer()]
+                Attr = {Key,Value} | Key
+                Key = name
+                    | nwid
+                    | freq
+                    | mode
+                    | essid
+                    | encode
+                    | range
+                    | ap
+                    | rate
+                    | power
+                Value = binary() | integer()
                 Parameters = [Parameter]
-                Parameter = [{name, binary()} | {nwid, binary()} |
-                    {freq, binary()} | {mode, binary()} | {essid, binary()} |
-                    {encode, binary()} | {range, binary()} | {ap, binary()} |
-                    {rate, binary()} | {power, binary()}]
+                Parameter = {name, binary()}
+                    | {nwid, binary()}
+                    | {freq, binary()}
+                    | {mode, binary()}
+                    | {essid, binary()}
+                    | {encode, binary()}
+                    | {range, binary()}
+                    | {ap, binary()}
+                    | {rate, binary()}
+                    | {power, binary()}
 
     Query or set a wireless parameter.
 
@@ -85,19 +105,36 @@ CAP\_NET\_ADMIN privileges:
     binary (which will be converted to a pointer to an iw_point struct
     and may require assigning a value to the flag field of the structure).
 
+    open() -> {ok, FD}
 
-    open() -> {ok, integer()}
+        Types   FD = integer()
 
     Obtain a netlink socket file descriptor.
 
+    close(FD) -> ok
 
-    close() -> ok
+        Types   FD = integer()
 
     Close the file descriptor.
 
 ### wierl
 
 ### rfkill
+
+rfkill is a wireless soft kill switch.
+
+    block() -> ok | {error, posix()}
+
+    Disable wireless devices.
+
+    unblock() -> ok | {error, posix()}
+
+    Enable wireless devices.
+
+    list() -> ok | {error, posix()}
+
+    Monitor rfkill device events.
+
 
 ## TODO
 

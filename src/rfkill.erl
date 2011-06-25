@@ -105,10 +105,14 @@ event(<<Idx:?UINT32,
     }.
 
 list() ->
-    {ok, FD} = procket:dev("rfkill"),
-    Res = list_1(FD),
-    ok = procket:close(FD),
-    Res.
+    case procket:dev("rfkill") of
+        {ok, FD} ->
+            Res = list_1(FD),
+            ok = procket:close(FD),
+            Res;
+        Error ->
+            Error
+    end.
 
 list_1(FD) ->
     {ok, Data} = procket:read(FD, 8),
@@ -135,10 +139,17 @@ list_1(FD) ->
 
 
 write(Event) when is_binary(Event) ->
-    {ok, FD} = procket:dev("rfkill"),
-    ok = procket:write(FD, Event),
+    case procket:dev("rfkill") of
+        {ok, FD} ->
+            write_1(FD, Event);
+        Error ->
+            Error
+    end.
+
+write_1(FD, Event) ->
+    Result = procket:write(FD, Event),
     ok = procket:close(FD),
-    ok.
+    Result.
 
 decode({event, Event}) when is_list(Event) ->
     [ decode(N) || N <- Event ];
