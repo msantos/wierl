@@ -36,8 +36,6 @@
 
 -include("wierl.hrl").
 
--define(FLAGS, 0).
-
 
 open() ->
     procket:socket(inet, dgram, 0).
@@ -67,12 +65,12 @@ param(Dev) when is_binary(Dev) ->
 %% Retreive wireless setting
 %%
 param(Socket, Dev, essid) ->
-    ioctl_buf(Socket, Dev, ?SIOCGIWESSID, ?IW_ESSID_MAX_SIZE+2);
+    ioctl_point(Socket, Dev, ?SIOCGIWESSID, ?IW_ESSID_MAX_SIZE+2);
 param(Socket, Dev, encode) ->
-    ioctl_buf(Socket, Dev, ?SIOCGIWENCODE, ?IW_ENCODING_TOKEN_MAX);
+    ioctl_point(Socket, Dev, ?SIOCGIWENCODE, ?IW_ENCODING_TOKEN_MAX);
 param(Socket, Dev, range) ->
     % wireless-tools uses sizeof(iwrange)*2
-    ioctl_buf(Socket, Dev, ?SIOCGIWRANGE, 1024);
+    ioctl_point(Socket, Dev, ?SIOCGIWRANGE, 1024);
 param(Socket, Dev, Key) when is_atom(Key) ->
     ioctl(Socket, Dev, req(Key));
 
@@ -82,8 +80,12 @@ param(Socket, Dev, Key) when is_atom(Key) ->
 param(Socket, Dev, {Key, Val}) when is_atom(Key), is_integer(Val) ->
     Struct = <<Val:?UINT32, 0:(12*8)>>,
     ioctl(Socket, Dev, set(Key), Struct);
+param(Socket, Dev, {essid, Val}) when is_binary(Val) ->
+    ioctl_point(Socket, Dev, set(essid), Val, 1);
 param(Socket, Dev, {Key, Val}) when is_atom(Key), is_binary(Val) ->
-    ioctl_buf(Socket, Dev, set(Key), Val);
+    ioctl_point(Socket, Dev, set(Key), Val);
+param(Socket, Dev, {Key, Val, Flag}) when is_atom(Key), is_binary(Val) ->
+    ioctl_point(Socket, Dev, set(Key), Val, Flag);
 
 param(_Socket, _Dev, {_Key, _Value}) ->
     {error, unsupported}.
@@ -114,9 +116,12 @@ ioctl(Socket, Dev, Req, Buf) ->
 
 
 %%
-%% ioctl with a dynamic buffer
+%% ioctl using an iw_point structure
 %%
-ioctl_buf(Socket, Dev, Req, Alloc) ->
+ioctl_point(Socket, Dev, Req, Alloc) ->
+    ioctl_point(Socket, Dev, Req, Alloc, 0).
+
+ioctl_point(Socket, Dev, Req, Alloc, Flags) ->
     ReqLen = if
         is_binary(Alloc) -> byte_size(Alloc);
         is_integer(Alloc) -> Alloc
@@ -128,7 +133,7 @@ ioctl_buf(Socket, Dev, Req, Alloc) ->
     {ok, Struct, [Res]} = procket:alloc([
             <<Dev/bytes, 0:Bits, 0>>,
             {ptr, Alloc},
-            <<ReqLen:?UINT16, ?FLAGS:?UINT16>>
+            <<ReqLen:?UINT16, Flags:?UINT16>>
         ]),
 
     case procket:ioctl(Socket, Req, Struct) of
