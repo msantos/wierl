@@ -26,6 +26,8 @@ CAP\_NET\_ADMIN privileges:
 
 ## USAGE
 
+### wierl_scan
+
     wierl_scan:list() ->  [{Interface, AccessPoints}]
     wierl_scan:list(Interface) ->  AccessPoints
     wierl_scan:list(Interface, Options) ->  AccessPoints
@@ -47,6 +49,55 @@ CAP\_NET\_ADMIN privileges:
     Decode some of the binary data values returned in the list of
     access points.
 
+### wierl_config
+
+    param(Ifname) -> Parameters
+    param(Socket, Ifname, Attr) -> [binary() | {error, unsupported} |
+        {error, posix()}]
+
+        Types   Ifname = binary()
+                Socket = int()
+                Attr = [{Key,Value}|Key]
+                Key = [name | nwid | freq | mode | essid | encode | range |
+                    ap | rate | power]
+                Value = [binary() | integer()]
+                Parameters = [Parameter]
+                Parameter = [{name, binary()} | {nwid, binary()} |
+                    {freq, binary()} | {mode, binary()} | {essid, binary()} |
+                    {encode, binary()} | {range, binary()} | {ap, binary()} |
+                    {rate, binary()} | {power, binary()}]
+
+    Query or set a wireless parameter.
+
+    Use the wierl module to decode the values, e.g.,
+
+        1> wierl:decode({freq,<<133,9,0,0,6,0,0,0,0,0,0,0,0,0,0,0>>}).
+        {frequency,2.437e9}
+
+    To set a parameter, a key/value as the attribute, e.g.,
+
+        1> {ok,S} = wierl_config:open().
+        {ok,7}
+        2> wierl_config:param(Socket, <<"wlan0">>, {essid, <<"MY ESSID">>}).
+        <<"MY ESSID">>
+
+    Depending on the parameter, the value can be either an integer or a
+    binary (which will be converted to a pointer to an iw_point struct
+    and may require assigning a value to the flag field of the structure).
+
+
+    open() -> {ok, integer()}
+
+    Obtain a netlink socket file descriptor.
+
+
+    close() -> ok
+
+    Close the file descriptor.
+
+### wierl
+
+### rfkill
 
 ## TODO
 
