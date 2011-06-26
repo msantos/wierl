@@ -100,10 +100,13 @@ CAP\_NET\_ADMIN privileges:
 
     Use the wierl module to decode the values, e.g.,
 
-        1> wierl:decode({freq,<<133,9,0,0,6,0,0,0,0,0,0,0,0,0,0,0>>}).
-        {frequency,2.437e9}
+        1> wierl_config:param(<<"wlan0">>, freq).
+        <<108,9,0,0,6,0,0,0,0,0,0,0,0,0,0,0>>
 
-    To set a parameter, a key/value as the attribute, e.g.,
+        2> wierl:decode({freq,<<108,9,0,0,6,0,0,0,0,0,0,0,0,0,0,0>>}).
+        {frequency,2.412e9}
+
+    To set a parameter, use a key/value as the attribute, e.g.,
 
         1> wierl_config:param(<<"wlan0">>, {essid, <<"MY ESSID">>}).
         <<"MY ESSID">>
@@ -168,8 +171,7 @@ rfkill is a wireless soft kill switch.
 
 ## TODO
 
-* convert to gen_fsm/gen_server
+* fix padding issues between 32/64-bit archs
+    * e.g., on 64-bit, this is broken:
 
-* put interfaces into monitor mode
-
-* dump 802.11 frames
+        wierl:decode({freq, wierl_config:param(<<"wlan0">>, freq)}).
