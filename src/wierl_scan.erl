@@ -102,7 +102,7 @@ ap(Socket, Dev) ->
             timer:sleep(1000),
             ap(Socket, Dev);
 
-        Error ->
+        {error, _} = Error ->
             Error
     end.
 
