@@ -30,7 +30,7 @@
 %% POSSIBILITY OF SUCH DAMAGE.
 -module(wierl_config).
 -export([
-        param/1, param/3,
+        param/1, param/2, param/3,
         open/0, close/1,
         up/1, down/1
     ]).
@@ -67,6 +67,12 @@ param(Dev) when is_binary(Dev) ->
         end,
     close(Socket),
     Attr.
+
+param(Dev, Param) when is_binary(Dev) ->
+    {ok, Socket} = open(),
+    Res = param(Socket, Dev, Param),
+    close(Socket),
+    Res.
 
 %%
 %% Retreive wireless setting

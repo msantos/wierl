@@ -58,6 +58,8 @@ CAP\_NET\_ADMIN privileges:
 ### wierl_config
 
     param(Ifname) -> Parameters
+    param(Ifname, Attr) -> binary() | {error, unsupported}
+            | {error, posix()}
     param(Socket, Ifname, Attr) -> binary() | {error, unsupported}
             | {error, posix()}
 
@@ -89,6 +91,13 @@ CAP\_NET\_ADMIN privileges:
 
     Query or set a wireless parameter.
 
+    param/1 lists all parameters for the interface.
+
+    param/3 queries or sets a single parameter.
+
+    param/2 is a wrapper around param/3 that will open and close the
+    netlink socket for the caller.
+
     Use the wierl module to decode the values, e.g.,
 
         1> wierl:decode({freq,<<133,9,0,0,6,0,0,0,0,0,0,0,0,0,0,0>>}).
@@ -96,9 +105,7 @@ CAP\_NET\_ADMIN privileges:
 
     To set a parameter, a key/value as the attribute, e.g.,
 
-        1> {ok,Socket} = wierl_config:open().
-        {ok,7}
-        2> wierl_config:param(Socket, <<"wlan0">>, {essid, <<"MY ESSID">>}).
+        1> wierl_config:param(<<"wlan0">>, {essid, <<"MY ESSID">>}).
         <<"MY ESSID">>
 
     Depending on the parameter, the value can be either an integer or a
@@ -109,10 +116,8 @@ CAP\_NET\_ADMIN privileges:
     down. For example, to put the interface into monitor mode:
 
         wierl_config:down(<<"wlan0">>),
-        {ok, Socket} = wierl_config:open(),
-        wierl_config:param(Socket, <<"wlan0">>, {mode, wierl:mode(monitor)}),
-        wierl_config:up(<<"wlan0">>),
-        wierl_config:close(Socket).
+        wierl_config:param(<<"wlan0">>, {mode, wierl:mode(monitor)}),
+        wierl_config:up(<<"wlan0">>).
 
 
     up(Ifname) -> ok
@@ -168,4 +173,3 @@ rfkill is a wireless soft kill switch.
 * put interfaces into monitor mode
 
 * dump 802.11 frames
-
