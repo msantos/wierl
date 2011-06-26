@@ -38,14 +38,14 @@ CAP\_NET\_ADMIN privileges:
                 BSSID = binary()
                 ScanInfo = [Info]
                 Info = {Key, binary()}
-                Key = custom
+                Key = [ custom
                     | encode
                     | essid
                     | freq
                     | genie
                     | mode
                     | qual
-                    | rate
+                    | rate ]
                 Options = [{essid, binary()}]
 
     Initiate a wireless scan and return the scan list.
@@ -64,7 +64,7 @@ CAP\_NET\_ADMIN privileges:
         Types   Ifname = binary()
                 Socket = int()
                 Attr = {Key,Value} | Key
-                Key = name
+                Key = [ name
                     | nwid
                     | freq
                     | mode
@@ -73,10 +73,10 @@ CAP\_NET\_ADMIN privileges:
                     | range
                     | ap
                     | rate
-                    | power
+                    | power ]
                 Value = binary() | integer()
                 Parameters = [Parameter]
-                Parameter = {name, binary()}
+                Parameter = [ {name, binary()}
                     | {nwid, binary()}
                     | {freq, binary()}
                     | {mode, binary()}
@@ -85,7 +85,7 @@ CAP\_NET\_ADMIN privileges:
                     | {range, binary()}
                     | {ap, binary()}
                     | {rate, binary()}
-                    | {power, binary()}
+                    | {power, binary()} ]
 
     Query or set a wireless parameter.
 
