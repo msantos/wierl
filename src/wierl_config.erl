@@ -136,8 +136,10 @@ ioctl_point(Socket, Dev, Req, Alloc, Flags) ->
             <<ReqLen:?UINT16, Flags:?UINT16>>
         ]),
 
+    Pointer = erlang:system_info({wordsize, external}) * 8,
+
     case procket:ioctl(Socket, Req, Struct) of
-        {ok, <<Dev:Len/bytes, 0:Bits, 0, _Ptr:?UINT32, ValLen:?UINT16, _Flag:?UINT16>>} ->
+        {ok, <<Dev:Len/bytes, 0:Bits, 0, _Ptr:Pointer, ValLen:?UINT16, _Flag:?UINT16>>} ->
             {ok, <<Val:ValLen/bytes, _/binary>>} = procket:buf(Res),
             Val;
         {error, _} = Error ->

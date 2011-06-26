@@ -89,8 +89,11 @@ ap(Socket, Dev) ->
             {ptr, 4096},
             <<4096:?UINT16, 0:?UINT16>>
         ]),
+
+    Pointer = erlang:system_info({wordsize, external}) * 8,
+
     case procket:ioctl(Socket, ?SIOCGIWSCAN, Req) of
-        {ok, <<_Ifname:16/bytes, _Ptr:?UINT32, Len:?UINT16, _Flag:?UINT16>>} ->
+        {ok, <<_Ifname:16/bytes, _Ptr:Pointer, Len:?UINT16, _Flag:?UINT16>>} ->
             {ok, <<Stream:Len/bytes, _/binary>>} = procket:buf(Res),
             event(Stream);
 
