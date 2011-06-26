@@ -31,10 +31,17 @@
 -module(wierl_config).
 -export([
         param/1, param/3,
-        open/0, close/1
+        open/0, close/1,
+        up/1, down/1
     ]).
 
 -include("wierl.hrl").
+
+-define(IFF_RUNNING, 16#40).
+-define(IFF_UP, 16#01).
+
+-define(SIOCGIFFLAGS, 16#8913).
+-define(SIOCSIFFLAGS, 16#8914).
 
 
 open() ->
@@ -143,6 +150,45 @@ ioctl_point(Socket, Dev, Req, Alloc, Flags) ->
             {ok, <<Val:ValLen/bytes, _/binary>>} = procket:buf(Res),
             Val;
         {error, _} = Error ->
+            Error
+    end.
+
+%%
+%% set interface RUNNING/UP status
+%%
+up(Dev) when byte_size(Dev) < ?IFNAMSIZ ->
+    {ok, Socket} = open(),
+
+    {ok, Flag} = get_flag(Socket, Dev),
+    ok = set_flag(Socket, Dev, Flag bor ?IFF_RUNNING bor ?IFF_UP),
+
+    ok = close(Socket),
+    ok.
+
+down(Dev) when byte_size(Dev) < ?IFNAMSIZ ->
+    {ok, Socket} = open(),
+
+    {ok, Flags} = get_flag(Socket, Dev),
+    ok = set_flag(Socket, Dev, Flags band bnot(?IFF_UP)),
+
+    ok = close(Socket),
+    ok.
+
+set_flag(FD, Dev, Flag) ->
+    Res = procket:ioctl(FD, ?SIOCSIFFLAGS,
+        <<Dev/bytes, 0:((15-byte_size(Dev))*8), 0:8, Flag:?UINT16, 0:(14*8)>>),
+    case Res of
+        {ok, _} -> ok;
+        Error -> Error
+    end.
+
+get_flag(FD, Dev) ->
+    Res = procket:ioctl(FD, ?SIOCGIFFLAGS,
+        <<Dev/bytes, 0:((15-byte_size(Dev))*8), 0:(16*8)>>),
+    case Res of
+        {ok, <<_:(16*8), Flag:?UINT16, _/binary>>} ->
+            {ok, Flag};
+        Error ->
             Error
     end.
 

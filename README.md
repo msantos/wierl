@@ -96,7 +96,7 @@ CAP\_NET\_ADMIN privileges:
 
     To set a parameter, a key/value as the attribute, e.g.,
 
-        1> {ok,S} = wierl_config:open().
+        1> {ok,Socket} = wierl_config:open().
         {ok,7}
         2> wierl_config:param(Socket, <<"wlan0">>, {essid, <<"MY ESSID">>}).
         <<"MY ESSID">>
@@ -105,11 +105,36 @@ CAP\_NET\_ADMIN privileges:
     binary (which will be converted to a pointer to an iw_point struct
     and may require assigning a value to the flag field of the structure).
 
+    To change some parameters, the interface must first be brought
+    down. For example, to put the interface into monitor mode:
+
+        wierl_config:down(<<"wlan0">>),
+        {ok, Socket} = wierl_config:open(),
+        wierl_config:param(Socket, <<"wlan0">>, {mode, wierl:mode(monitor)}),
+        wierl_config:up(<<"wlan0">>),
+        wierl_config:close(Socket).
+
+
+    up(Ifname) -> ok
+
+        Types   Ifname = binary()
+
+    Configure the interface as up and running.
+
+
+    down(Ifname) -> ok
+
+        Types   Ifname = binary()
+
+    Bring down the interface.
+
+
     open() -> {ok, FD}
 
         Types   FD = integer()
 
     Obtain a netlink socket file descriptor.
+
 
     close(FD) -> ok
 
