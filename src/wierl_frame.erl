@@ -46,25 +46,7 @@
 open(Ifname) when byte_size(Ifname) < ?IFNAMSIZ ->
     {ok, Socket} = packet:socket(?ETH_P_ALL),
     Ifindex = packet:ifindex(Socket, binary_to_list(Ifname)),
-
-    Sockaddr_ll = <<
-        ?PF_PACKET:16/native,   % sll_family: PF_PACKET
-        0:16,                   % sll_protocol: Physical layer protocol
-        Ifindex:32/native,      % sll_ifindex: Interface number
-        0:16,                   % sll_hatype: Header type
-        0:8,                    % sll_pkttype: Packet type
-        0:8,                    % sll_halen: address length
-        0:8,                    % sll_addr[8]: physical layer address
-        0:8,                    % sll_addr[8]: physical layer address
-        0:8,                    % sll_addr[8]: physical layer address
-        0:8,                    % sll_addr[8]: physical layer address
-        0:8,                    % sll_addr[8]: physical layer address
-        0:8,                    % sll_addr[8]: physical layer address
-        0:8,                    % sll_addr[8]: physical layer address
-        0:8                     % sll_addr[8]: physical layer address
-        >>,
-
-    ok = procket:bind(Socket, Sockaddr_ll),
+    ok = packet:bind(Socket, Ifindex),
     {ok, Socket, Ifindex}.
 
 close(Socket) when is_integer(Socket) ->
