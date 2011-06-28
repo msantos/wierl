@@ -175,3 +175,13 @@ rfkill is a wireless soft kill switch.
     * e.g., on 64-bit, this is broken:
 
         wierl:decode({freq, wierl_config:param(<<"wlan0">>, freq)}).
+
+* decode monitor mode frames
+
+* generate monitor mode frames
+
+* get stats from /proc/net/wireless
+
+* cleanup: redundant constants between wierl/procket
+
+* move frame decoding/encoding to pkt
