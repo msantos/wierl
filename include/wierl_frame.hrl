@@ -29,13 +29,10 @@
 %% ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 %% POSSIBILITY OF SUCH DAMAGE.
 
--record(ieee802_11_radio, {
-    version = 0,
-    pad = 0,
-    len = 0,
-    present = []
-}).
+-define(IEEE802_11_TSTAMP_LEN, 8).
+-define(IEEE802_11_AP_LEN, 6).
 
+-define(IEEE802_11_PROTOCOL_VERSION, 0).
 
 -define(FC_VERSION(Fc), ((Fc) band 16#3)).
 -define(FC_TYPE(Fc), (((Fc) bsr 2) band 16#3)).
@@ -89,3 +86,106 @@
 -define(DATA_QOS_NODATA, 16#C).
 -define(DATA_QOS_CF_POLL_NODATA, 16#E).
 -define(DATA_QOS_CF_ACK_POLL_NODATA, 16#F).
+
+-define(DATA_FRAME_IS_CF_ACK(X), ((X) band 16#01)).
+-define(DATA_FRAME_IS_CF_POLL(X), ((X) band 16#02)).
+-define(DATA_FRAME_IS_NULL(X), ((X) band 16#04)).
+-define(DATA_FRAME_IS_QOS(X), ((X) band 16#08)).
+
+-define(E_SSID, 0).
+-define(E_RATES, 1).
+-define(E_FH, 2).
+-define(E_DS, 3).
+-define(E_CF, 4).
+-define(E_TIM, 5).
+-define(E_IBSS, 6).
+-define(E_CHALLENGE, 16).
+
+
+-record(ieee802_11_radio, {
+        version = 0,
+        pad = 0,
+        len = 0,
+        present = []
+    }).
+
+-record(ieee802_11_fc, {
+        version = ?IEEE802_11_PROTOCOL_VERSION,
+        type = <<>>,
+        subtype = <<>>,
+        to_ds = 0,
+        from_ds = 0,
+        more_frag = 0,
+        retry = 0,
+        power_management = 0,
+        more_data = 0,
+        protected = 0,
+        order = 0
+    }).
+
+-record(ieee802_11_frame, {
+        duration = 0,
+        seq_ctl = 0,
+        address = {<<0,0,0,0,0,0>>, <<0,0,0,0,0,0>>, <<0,0,0,0,0,0>>, <<0,0,0,0,0,0>>},
+        data = <<>>
+    }).
+
+-record(ieee802_11_management, {
+        duration = 0,
+        seq_ctl = 0,
+        sa = <<0,0,0,0,0,0>>,
+        da = <<0,0,0,0,0,0>>,
+        bssid = <<0,0,0,0,0,0>>
+    }).
+
+-record(ieee802_11_cf_rts, {
+        duration = 0,
+        ra = <<0,0,0,0,0,0>>,
+        ta = <<0,0,0,0,0,0>>
+    }).
+
+-record(ieee802_11_cf_cts, {
+        duration = 0,
+        ra = <<0,0,0,0,0,0>>
+    }).
+
+-record(ieee802_11_cf_ack, {
+        duration = 0,
+        ra = <<0,0,0,0,0,0>>
+    }).
+
+-record(ieee802_11_cf_ps, {
+        aid = 0,
+        bssid = <<0,0,0,0,0,0>>,
+        ta = <<0,0,0,0,0,0>>
+    }).
+
+-record(ieee802_11_cf_cfend, {
+        duration = 0,
+        ra = <<0,0,0,0,0,0>>,
+        bssid = <<0,0,0,0,0,0>>
+    }).
+
+-record(ieee802_11_cf_bar, {
+        duration = 0,
+        ra = <<0,0,0,0,0,0>>,
+        ta = <<0,0,0,0,0,0>>,
+        bar = 0,
+        seq_ctl = 0
+    }).
+
+-record(ieee802_11_cf_ba, {
+        duration = 0,
+        ba = 0,
+        seq_ctl = 0,
+        bitmap = <<>>
+    }).
+
+-record(ieee802_11_data, {
+        duration = 0,
+        da = <<0,0,0,0,0,0>>,
+        sa = <<0,0,0,0,0,0>>,
+        ra = <<0,0,0,0,0,0>>,
+        ta = <<0,0,0,0,0,0>>,
+        bssid = <<0,0,0,0,0,0>>
+    }).

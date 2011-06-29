@@ -32,8 +32,15 @@
 -define(UINT32, 4/native-unsigned-integer-unit:8).
 -define(UINT64, 8/native-unsigned-integer-unit:8).
 
+-define(UINT16LE, 2/little-unsigned-integer-unit:8).
+-define(UINT32LE, 4/little-unsigned-integer-unit:8).
+-define(UINT64LE, 8/little-unsigned-integer-unit:8).
+
 -define(INT16, 2/native-signed-integer-unit:8).
 -define(INT32, 4/native-signed-integer-unit:8).
+
+-define(INT16LE, 2/little-signed-integer-unit:8).
+-define(INT32LE, 4/little-signed-integer-unit:8).
 
 -define(IFNAMSIZ, 16).
 -define(SIOCSIWSCAN, 16#8B18).  % Trigger a scan

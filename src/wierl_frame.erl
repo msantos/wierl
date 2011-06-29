@@ -36,7 +36,7 @@
 -export([
         open/1, close/1,
         decode/1, decode/2,
-        header/2, frame/1
+        header/2, frame_control/1, frame_type/2
     ]).
 
 -include("wierl.hrl").
@@ -56,6 +56,11 @@ close(Socket) when is_integer(Socket) ->
     procket:close(Socket).
 
 
+%%
+%% Radiotap header
+%%
+%% See: http://netbsd.gw.com/cgi-bin/man-cgi?ieee80211_radiotap+9+NetBSD-current
+%%
 decode(<<Version:8, Pad:8, Len:16/native, Present:?UINT32, _/binary>> = Frame) ->
     Len1 = Len-8,
     <<_:8/bytes, Header:Len1/bytes, Data/binary>> = Frame,
@@ -179,60 +184,313 @@ header(#ieee802_11_radio{} = R, Bin) when is_binary(Bin) ->
     {lists:reverse(Header), Unknown}.
 
 
-% struct mgmt_header_t {
-%         u_int16_t   fc;
-%         u_int16_t   duration;
-%         u_int8_t    da[6];
-%         u_int8_t    sa[6];
-%         u_int8_t    bssid[6];
-%         u_int16_t   seq_ctrl;
-% };
-frame(<<Fc:?UINT16, Rest/binary>>) when ?FC_TYPE(Fc) == ?T_MGMT ->
-    {Duration, DA, SA, BSSID, Seq_ctl, Data} = mgmt(?FC_SUBTYPE(Fc), Rest),
-    {{mgmt_header, Fc, Duration, DA, SA, BSSID, Seq_ctl}, Data}.
+%%
+%% Frames
+%%
+%% See: Section 7
+%% http://standards.ieee.org/getieee802/download/802.11-2007.pdf
+%%
 
-mgmt(?ST_BEACON, <<Duration:?UINT16,
-    DA1,DA2,DA3,DA4,DA5,DA6,
-    SA1,SA2,SA3,SA4,SA5,SA6,
-    BS1,BS2,BS3,BS4,BS5,BS6,
-    Seq_ctl:?UINT16, Rest/binary>>) ->
-    {Duration, {DA1,DA2,DA3,DA4,DA5,DA6}, {SA1,SA2,SA3,SA4,SA5,SA6},
-        {BS1,BS2,BS3,BS4,BS5,BS6}, Seq_ctl, Rest}.
+%% Frame control header
+frame_control(<<FC:16, Data/binary>>) ->
+    <<Version:2, Type:2, Subtype:4,
+    ToDS:1, FromDS:1, MoreFrag:1, Retry:1, PwrMgmt:1,
+    MoreData:1, Protected:1, Order:1>> = <<FC:?UINT16LE>>,
+    {#ieee802_11_fc{
+        version = Version,
+        type = Type,
+        subtype = Subtype,
+        to_ds = ToDS,
+        from_ds = FromDS,
+        more_frag = MoreFrag,
+        retry = Retry,
+        power_management = PwrMgmt,
+        more_data = MoreData,
+        protected = Protected,
+        order = Order
+    }, Data};
+frame_control(#ieee802_11_fc{
+        version = Version,
+        type = Type,
+        subtype = Subtype,
+        to_ds = ToDS,
+        from_ds = FromDS,
+        more_frag = MoreFrag,
+        retry = Retry,
+        power_management = PwrMgmt,
+        more_data = MoreData,
+        protected = Protected,
+        order = Order
+    }) ->
+    FC = <<Version:2, Type:2, Subtype:4,
+    ToDS:1, FromDS:1, MoreFrag:1, Retry:1, PwrMgmt:1,
+    MoreData:1, Protected:1, Order:1>>,
+    be_to_le(FC).
 
 
-type(tsft) -> 0;
-type(flags) -> 1;
-type(rate) -> 2;
-type(channel) -> 3;
-type(fhss) -> 4;
-type(dbm_antsignal) -> 5;
-type(dbm_antnoise) -> 6;
-type(lock_quality) -> 7;
-type(tx_attenuation) -> 8;
-type(db_tx_attenuation) -> 9;
-type(dbm_tx_power) -> 10;
-type(antenna) -> 11;
-type(db_antsignal) -> 12;
-type(db_antnoise) -> 13;
-type(ext) -> 31.
+%%
+%% Management
+%%
+frame_type(#ieee802_11_fc{type = 0}, <<Duration:?UINT16LE,
+    DA:6/bytes, SA:6/bytes, BSSID:6/bytes,
+    SeqCtl:?UINT16LE, Body/binary>>) ->
+    {#ieee802_11_management{
+            duration = Duration,
+            da = DA,
+            sa = SA,
+            bssid = BSSID,
+            seq_ctl = SeqCtl
+        }, Body};
+frame_type(#ieee802_11_fc{type = 0},
+    #ieee802_11_management{
+            duration = Duration,
+            da = DA,
+            sa = SA,
+            bssid = BSSID,
+            seq_ctl = SeqCtl
+        }) ->
+    <<Duration:?UINT16LE,
+    DA:6/bytes, SA:6/bytes, BSSID:6/bytes,
+    SeqCtl:?UINT16LE>>;
 
 
-% IEEE80211_RADIOTAP_FLAGS
-%flags(16#01) -> cfp;
-%flags(16#02) -> shortpre;
-%flags(16#04) -> wep;
-%flags(16#08) -> frag;
-%flags(16#10) -> fcs;
-%flags(16#20) -> datapad;
-%flags(16#40) -> badfcs;
-%
-%flags(cfp) -> 16#01;
-%flags(shortpre) -> 16#02;
-%flags(wep) -> 16#04;
-%flags(frag) -> 16#08;
-%flags(fcs) -> 16#10;
-%flags(datapad) -> 16#20;
-%flags(badfcs) -> 16#40.
+%%
+%% Control
+%%
 
+% Request to send (RTS)
+frame_type(#ieee802_11_fc{type = 1,
+        subtype = 16#B},
+    <<Duration:?UINT16LE,
+    RA:6/bytes, TA:6/bytes>>) ->
+    {#ieee802_11_cf_rts{
+            duration = Duration,
+            ra = RA,
+            ta = TA
+        }};
+frame_type(#ieee802_11_fc{type = 1,
+        subtype = 16#B},
+    #ieee802_11_cf_rts{
+            duration = Duration,
+            ra = RA,
+            ta = TA
+        }) ->
+    <<Duration:?UINT16LE,
+    RA:6/bytes, TA:6/bytes>>;
+
+% Clear to send (CTS)
+frame_type(#ieee802_11_fc{type = 1,
+        subtype = 16#C},
+    <<Duration:?UINT16LE, RA:6/bytes>>) ->
+    {#ieee802_11_cf_cts{
+            duration = Duration,
+            ra = RA
+        }};
+frame_type(#ieee802_11_fc{type = 1,
+        subtype = 16#C},
+    #ieee802_11_cf_cts{
+            duration = Duration,
+            ra = RA
+        }) ->
+    <<Duration:?UINT16LE, RA:6/bytes>>;
+
+% Acknowledgement (ACK)
+frame_type(#ieee802_11_fc{type = 1,
+        subtype = 16#D},
+    <<Duration:?UINT16LE, RA:6/bytes>>) ->
+    {#ieee802_11_cf_ack{
+            duration = Duration,
+            ra = RA
+        }};
+frame_type(#ieee802_11_fc{type = 1,
+        subtype = 16#D},
+    #ieee802_11_cf_ack{
+            duration = Duration,
+            ra = RA
+        }) ->
+    <<Duration:?UINT16LE, RA:6/bytes>>;
+
+% Power save poll (PS)
+frame_type(#ieee802_11_fc{type = 1,
+        subtype = 16#A},
+    <<AID:?UINT16LE, BSSID:6/bytes, TA:6/bytes>>) ->
+    {#ieee802_11_cf_ps{
+            aid = AID,
+            bssid = BSSID,
+            ta = TA
+        }};
+frame_type(#ieee802_11_fc{type = 1,
+        subtype = 16#A},
+    #ieee802_11_cf_ps{
+            aid = AID,
+            bssid = BSSID,
+            ta = TA
+        }) ->
+    <<AID:?UINT16LE, BSSID:6/bytes, TA:6/bytes>>;
+
+% Contention free end; CF end + CF ACK
+frame_type(#ieee802_11_fc{type = 1,
+        subtype = Subtype},
+    <<Duration:?UINT16LE, RA:6/bytes, BSSID:6/bytes>>)
+    when Subtype == 16#E; Subtype == 16#F ->
+    {#ieee802_11_cf_cfend{
+            duration = Duration,
+            ra = RA,
+            bssid = BSSID
+        }};
+frame_type(#ieee802_11_fc{type = 1,
+        subtype = Subtype},
+    #ieee802_11_cf_cfend{
+            duration = Duration,
+            ra = RA,
+            bssid = BSSID
+        })
+    when Subtype == 16#E; Subtype == 16#F ->
+    <<Duration:?UINT16LE, RA:6/bytes, BSSID:6/bytes>>;
+
+% Block Ack Request (BlockAckReq)
+frame_type(#ieee802_11_fc{type = 1,
+        subtype = 8},
+    <<Duration:?UINT16LE, RA:6/bytes, TA:6/bytes,
+    BAR:?UINT16LE, SeqCtl:?UINT16LE>>) ->
+    {#ieee802_11_cf_bar{
+            duration = Duration,
+            ra = RA,
+            ta = TA,
+            bar = BAR,
+            seq_ctl = SeqCtl
+        }};
+frame_type(#ieee802_11_fc{type = 1,
+        subtype = 8},
+    #ieee802_11_cf_bar{
+            duration = Duration,
+            ra = RA,
+            ta = TA,
+            bar = BAR,
+            seq_ctl = SeqCtl
+        }) ->
+    <<Duration:?UINT16LE, RA:6/bytes, TA:6/bytes,
+    BAR:?UINT16LE, SeqCtl:?UINT16LE>>;
+
+% Block Ack (BlockAck)
+frame_type(#ieee802_11_fc{type = 1,
+        subtype = 9},
+    <<Duration:?UINT16LE, BA:?UINT16LE, SeqCtl:?UINT16LE,
+    Bitmap:128/bytes>>) ->
+    {#ieee802_11_cf_ba{
+            duration = Duration,
+            ba = BA,
+            seq_ctl = SeqCtl,
+            bitmap = Bitmap
+        }};
+frame_type(#ieee802_11_fc{type = 1,
+        subtype = 8},
+    #ieee802_11_cf_ba{
+            duration = Duration,
+            ba = BA,
+            seq_ctl = SeqCtl,
+            bitmap = Bitmap
+        }) ->
+    <<Duration:?UINT16LE, BA:?UINT16LE, SeqCtl:?UINT16LE,
+    Bitmap:(128*8)>>;
+
+%%
+%% Data
+%%
+frame_type(#ieee802_11_fc{type = 2,
+    to_ds = 0, from_ds = 0},
+    <<Duration:?UINT16LE, DA:6/bytes, SA:6/bytes, BSSID:6/bytes, Body/binary>>) ->
+    {#ieee802_11_data{
+            duration = Duration,
+            da = DA,
+            sa = SA,
+            bssid = BSSID
+        }, Body};
+frame_type(#ieee802_11_fc{type = 2,
+    to_ds = 0, from_ds = 0},
+    #ieee802_11_data{
+            duration = Duration,
+            da = DA,
+            sa = SA,
+            bssid = BSSID
+        }) ->
+    <<Duration:?UINT16LE, DA:6/bytes, SA:6/bytes, BSSID:6/bytes>>;
+
+frame_type(#ieee802_11_fc{type = 2,
+    to_ds = 0, from_ds = 1},
+    <<Duration:?UINT16LE, DA:6/bytes, BSSID:6/bytes, SA:6/bytes, Body/binary>>) ->
+    {#ieee802_11_data{
+            duration = Duration,
+            da = DA,
+            sa = SA,
+            bssid = BSSID
+        }, Body};
+frame_type(#ieee802_11_fc{type = 2,
+    to_ds = 0, from_ds = 1},
+    #ieee802_11_data{
+            duration = Duration,
+            da = DA,
+            sa = SA,
+            bssid = BSSID
+        }) ->
+    <<Duration:?UINT16LE, DA:6/bytes, BSSID:6/bytes, SA:6/bytes>>;
+
+frame_type(#ieee802_11_fc{type = 2,
+    to_ds = 1, from_ds = 0},
+    <<Duration:?UINT16LE, BSSID:6/bytes, SA:6/bytes, DA:6/bytes, Body/binary>>) ->
+    {#ieee802_11_data{
+            duration = Duration,
+            da = DA,
+            sa = SA,
+            bssid = BSSID
+        }, Body};
+frame_type(#ieee802_11_fc{type = 2,
+    to_ds = 1, from_ds = 0},
+    #ieee802_11_data{
+            duration = Duration,
+            da = DA,
+            sa = SA,
+            bssid = BSSID
+        }) ->
+    <<Duration:?UINT16LE, BSSID:6/bytes, SA:6/bytes, DA:6/bytes>>;
+
+frame_type(#ieee802_11_fc{type = 2,
+    to_ds = 1, from_ds = 1},
+    <<Duration:?UINT16LE, RA:6/bytes, TA:6/bytes, DA:6/bytes,
+    SA:6/bytes, Body/binary>>) ->
+    {#ieee802_11_data{
+            duration = Duration,
+            ra = RA,
+            ta = TA,
+            da = DA,
+            sa = SA
+        }, Body};
+frame_type(#ieee802_11_fc{type = 2,
+    to_ds = 1, from_ds = 1},
+    #ieee802_11_data{
+            duration = Duration,
+            ra = RA,
+            ta = TA,
+            da = DA,
+            sa = SA
+        }) ->
+    <<Duration:?UINT16LE, RA:6/bytes, TA:6/bytes, DA:6/bytes,
+    SA:6/bytes>>;
+
+%%
+%% Reserved
+%%
+frame_type(#ieee802_11_fc{type = 3}, Body) ->
+    {reserved, Body}.
+
+
+%%-------------------------------------------------------------------------
+%%% Internal functions
+%%-------------------------------------------------------------------------
 bool(0) -> false;
 bool(1) -> true.
+
+be_to_le(Bin) ->
+    Size = byte_size(Bin),
+    <<N:Size/little-unsigned-integer-unit:8>> = Bin,
+    <<N:(Size*8)>>.
