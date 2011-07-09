@@ -189,13 +189,18 @@ header(#ieee802_11_radio{} = R, Bin) when is_binary(Bin) ->
 %%
 %% See: Section 7
 %% http://standards.ieee.org/getieee802/download/802.11-2007.pdf
-%%
 
 %% Frame control header
-frame_control(<<FC:16, Data/binary>>) ->
-    <<Version:2, Type:2, Subtype:4,
-    ToDS:1, FromDS:1, MoreFrag:1, Retry:1, PwrMgmt:1,
-    MoreData:1, Protected:1, Order:1>> = <<FC:?UINT16LE>>,
+%% 2 bytes, little endian
+%%
+%% Match frame control in big-endian format
+frame_control(<<
+    Subtype:4, Type:2, Version:2,
+
+    Order:1, Protected:1, MoreData:1, PwrMgmt:1,
+    Retry:1, MoreFrag:1, FromDS:1, ToDS:1,
+    Data/binary>>) ->
+
     {#ieee802_11_fc{
         version = Version,
         type = Type,
@@ -222,10 +227,9 @@ frame_control(#ieee802_11_fc{
         protected = Protected,
         order = Order
     }) ->
-    FC = <<Version:2, Type:2, Subtype:4,
-    ToDS:1, FromDS:1, MoreFrag:1, Retry:1, PwrMgmt:1,
-    MoreData:1, Protected:1, Order:1>>,
-    be_to_le(FC).
+    <<Subtype:4, Type:2, Version:2,
+    Order:1, Protected:1, MoreData:1, PwrMgmt:1,
+    Retry:1, MoreFrag:1, FromDS:1, ToDS:1>>;
 
 
 %%
@@ -268,7 +272,7 @@ frame_type(#ieee802_11_fc{type = 1,
             duration = Duration,
             ra = RA,
             ta = TA
-        }};
+        }, <<>>};
 frame_type(#ieee802_11_fc{type = 1,
         subtype = 16#B},
     #ieee802_11_cf_rts{
@@ -286,7 +290,7 @@ frame_type(#ieee802_11_fc{type = 1,
     {#ieee802_11_cf_cts{
             duration = Duration,
             ra = RA
-        }};
+        }, <<>>};
 frame_type(#ieee802_11_fc{type = 1,
         subtype = 16#C},
     #ieee802_11_cf_cts{
@@ -302,7 +306,7 @@ frame_type(#ieee802_11_fc{type = 1,
     {#ieee802_11_cf_ack{
             duration = Duration,
             ra = RA
-        }};
+        }, <<>>};
 frame_type(#ieee802_11_fc{type = 1,
         subtype = 16#D},
     #ieee802_11_cf_ack{
@@ -319,7 +323,7 @@ frame_type(#ieee802_11_fc{type = 1,
             aid = AID,
             bssid = BSSID,
             ta = TA
-        }};
+        }, <<>>};
 frame_type(#ieee802_11_fc{type = 1,
         subtype = 16#A},
     #ieee802_11_cf_ps{
@@ -338,7 +342,7 @@ frame_type(#ieee802_11_fc{type = 1,
             duration = Duration,
             ra = RA,
             bssid = BSSID
-        }};
+        }, <<>>};
 frame_type(#ieee802_11_fc{type = 1,
         subtype = Subtype},
     #ieee802_11_cf_cfend{
@@ -360,7 +364,7 @@ frame_type(#ieee802_11_fc{type = 1,
             ta = TA,
             bar = BAR,
             seq_ctl = SeqCtl
-        }};
+        }, <<>>};
 frame_type(#ieee802_11_fc{type = 1,
         subtype = 8},
     #ieee802_11_cf_bar{
@@ -383,7 +387,7 @@ frame_type(#ieee802_11_fc{type = 1,
             ba = BA,
             seq_ctl = SeqCtl,
             bitmap = Bitmap
-        }};
+        }, <<>>};
 frame_type(#ieee802_11_fc{type = 1,
         subtype = 8},
     #ieee802_11_cf_ba{
@@ -490,8 +494,3 @@ frame_type(#ieee802_11_fc{}, _Body) ->
 %%-------------------------------------------------------------------------
 bool(0) -> false;
 bool(1) -> true.
-
-be_to_le(Bin) ->
-    Size = byte_size(Bin),
-    <<N:Size/little-unsigned-integer-unit:8>> = Bin,
-    <<N:(Size*8)>>.
