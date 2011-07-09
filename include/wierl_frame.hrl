@@ -123,13 +123,6 @@
         order = 0
     }).
 
--record(ieee802_11_frame, {
-        duration = 0,
-        seq_ctl = 0,
-        address = {<<0,0,0,0,0,0>>, <<0,0,0,0,0,0>>, <<0,0,0,0,0,0>>, <<0,0,0,0,0,0>>},
-        data = <<>>
-    }).
-
 -record(ieee802_11_management, {
         duration = 0,
         seq_ctl = 0,
