@@ -119,6 +119,28 @@ frame_type(#ieee802_11_fc{type = 0, subtype = 0},
         management_body(Body)
     };
 
+% Association response
+frame_type(#ieee802_11_fc{type = 0, subtype = 1},
+    <<Duration:?UINT16LE,
+    DA:6/bytes, SA:6/bytes, BSSID:6/bytes,
+    SeqCtl:?UINT16LE,
+
+    Capability:?UINT16LE,
+    Status:?UINT16LE,
+    Aid:?UINT16LE,
+
+    Body/binary>>) ->
+    {#ieee802_11_management{
+            duration = Duration,
+            da = DA,
+            sa = SA,
+            bssid = BSSID,
+            seq_ctl = field(seq_ctl, SeqCtl)
+        },
+        [{capability, Capability}, {status_code, Status, {aid, Aid}}] ++
+        management_body(Body)
+    };
+
 % Beacon
 frame_type(#ieee802_11_fc{type = 0, subtype = 8},
     <<Duration:?UINT16LE,
