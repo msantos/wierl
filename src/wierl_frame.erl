@@ -210,7 +210,6 @@ frame_type(#ieee802_11_fc{type = 0, subtype = 8},
     DA:6/bytes, SA:6/bytes, BSSID:6/bytes,
     SeqCtl:?UINT16LE,
 
-    % Frame body
     Timestamp:8/bytes,
     Interval:?UINT16LE,
     Capability:?UINT16LE,
@@ -256,6 +255,46 @@ frame_type(#ieee802_11_fc{type = 0, subtype = 10},
             bssid = BSSID,
             seq_ctl = field(seq_ctl, SeqCtl)
         }, [{reason_code, Reason}, {vendor, Vendor}]};
+
+% Authentication
+frame_type(#ieee802_11_fc{type = 0, subtype = 11},
+    <<Duration:?UINT16LE,
+    DA:6/bytes, SA:6/bytes, BSSID:6/bytes,
+    SeqCtl:?UINT16LE,
+
+    Alg:?UINT16LE,
+    TransSeqNum:?UINT16LE,
+    Status:?UINT16LE,
+
+    Body/binary>>) ->
+    {#ieee802_11_management{
+            duration = Duration,
+            da = DA,
+            sa = SA,
+            bssid = BSSID,
+            seq_ctl = field(seq_ctl, SeqCtl)
+        },
+        [{auth_alg, Alg}, {auth_trans_seq_num, TransSeqNum},
+            {status_code, Status}] ++
+        management_body(Body)
+    };
+
+% Deauthentication
+frame_type(#ieee802_11_fc{type = 0, subtype = 12},
+    <<Duration:?UINT16LE,
+    DA:6/bytes, SA:6/bytes, BSSID:6/bytes,
+    SeqCtl:?UINT16LE,
+
+    Reason:?UINT16LE, Vendor/binary>>) ->
+    {#ieee802_11_management{
+            duration = Duration,
+            da = DA,
+            sa = SA,
+            bssid = BSSID,
+            seq_ctl = field(seq_ctl, SeqCtl)
+        },
+        [{reason_code, Reason}, {vendor, Vendor}]
+    };
 
 % Unhandled, valid management frames
 % Reserved: 0110-0111, 1110-1111
