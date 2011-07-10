@@ -133,7 +133,23 @@ frame_type(#ieee802_11_fc{type = 0, subtype = 9},
             sa = SA,
             bssid = BSSID,
             seq_ctl = field(seq_ctl, SeqCtl)
-        }, <<>>};
+        }, []};
+
+% Disassociation
+frame_type(#ieee802_11_fc{type = 0, subtype = 10},
+    <<Duration:?UINT16LE,
+    DA:6/bytes, SA:6/bytes, BSSID:6/bytes,
+    SeqCtl:?UINT16LE,
+
+    Reason:?UINT16LE, Vendor/binary
+    >>) ->
+    {#ieee802_11_management{
+            duration = Duration,
+            da = DA,
+            sa = SA,
+            bssid = BSSID,
+            seq_ctl = field(seq_ctl, SeqCtl)
+        }, [{reason_code, Reason}, {vendor, Vendor}]};
 
 % Unhandled, valid management frames
 % Reserved: 0110-0111, 1110-1111
