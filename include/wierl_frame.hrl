@@ -102,7 +102,7 @@
 -define(E_CHALLENGE, 16).
 
 
--record(ieee802_11_radio, {
+-record(ieee802_11_radiotap, {
         version = 0,
         pad = 0,
         len = 0,

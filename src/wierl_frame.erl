@@ -57,11 +57,13 @@ close(Socket) when is_integer(Socket) ->
     procket:close(Socket).
 
 
-%%
-%% Radiotap header
-%%
-%% See: http://netbsd.gw.com/cgi-bin/man-cgi?ieee80211_radiotap+9+NetBSD-current
-%%
+%%-------------------------------------------------------------------------
+%%% Radiotap header
+%%-------------------------------------------------------------------------
+
+%% See:
+%% http://netbsd.gw.com/cgi-bin/man-cgi?ieee80211_radiotap+9+NetBSD-current
+
 decode(<<Version:8, Pad:8, Len:16/native, Present:?UINT32, _/binary>> = Frame) ->
     Len1 = Len-8,
     <<_:8/bytes, Header:Len1/bytes, Data/binary>> = Frame,
@@ -71,7 +73,7 @@ decode(<<Version:8, Pad:8, Len:16/native, Present:?UINT32, _/binary>> = Frame) -
     Tx_attenuation:1, Lock_quality:1, Dbm_antnoise:1, Dbm_antsignal:1, Fhss:1, Channel:1, Rate:1,
     Flags:1, Tsft:1>> = <<Present:32>>,
 
-    {#ieee802_11_radio{
+    {#ieee802_11_radiotap{
         version = Version,
         pad = Pad,
         len = Len,
@@ -173,7 +175,7 @@ decode(vendor_namespace, <<OUI1:8, OUI2:8, OUI3:8, Subspace:8, Len:?UINT16, Data
     {{vendor_namespace, {OUI1, OUI2, OUI3}, Subspace, Len}, Data}.
 
 
-header(#ieee802_11_radio{} = R, Bin) when is_binary(Bin) ->
+header(#ieee802_11_radiotap{} = R, Bin) when is_binary(Bin) ->
     {Header, Unknown} = lists:foldl(
         fun ({Type, true}, {Present, Data}) ->
                 {Decoded, Rest} = wierl_frame:decode(Type, Data),
@@ -181,7 +183,7 @@ header(#ieee802_11_radio{} = R, Bin) when is_binary(Bin) ->
             ({_Type, false}, Present) -> Present
         end,
         {[], Bin},
-        R#ieee802_11_radio.present),
+        R#ieee802_11_radiotap.present),
     {lists:reverse(Header), Unknown}.
 
 
