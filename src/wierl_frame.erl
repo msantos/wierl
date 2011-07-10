@@ -229,7 +229,7 @@ frame_control(#ieee802_11_fc{
     }) ->
     <<Subtype:4, Type:2, Version:2,
     Order:1, Protected:1, MoreData:1, PwrMgmt:1,
-    Retry:1, MoreFrag:1, FromDS:1, ToDS:1>>;
+    Retry:1, MoreFrag:1, FromDS:1, ToDS:1>>.
 
 
 %%
