@@ -164,6 +164,46 @@ frame_type(#ieee802_11_fc{type = 0, subtype = 2},
         management_body(Body)
     };
 
+% Probe request
+frame_type(#ieee802_11_fc{type = 0, subtype = 4},
+    <<Duration:?UINT16LE,
+    DA:6/bytes, SA:6/bytes, BSSID:6/bytes,
+    SeqCtl:?UINT16LE,
+
+    Body/binary>>) ->
+    {#ieee802_11_management{
+            duration = Duration,
+            da = DA,
+            sa = SA,
+            bssid = BSSID,
+            seq_ctl = field(seq_ctl, SeqCtl)
+        },
+        management_body(Body)
+    };
+
+% Probe response
+frame_type(#ieee802_11_fc{type = 0, subtype = 5},
+    <<Duration:?UINT16LE,
+    DA:6/bytes, SA:6/bytes, BSSID:6/bytes,
+    SeqCtl:?UINT16LE,
+
+    Timestamp:?UINT16LE,
+    Beacon:?UINT16LE,
+    Capability:?UINT16LE,
+
+    Body/binary>>) ->
+    {#ieee802_11_management{
+            duration = Duration,
+            da = DA,
+            sa = SA,
+            bssid = BSSID,
+            seq_ctl = field(seq_ctl, SeqCtl)
+        },
+        [{timestamp, Timestamp}, {beacon_interval, Beacon},
+            {capability, Capability}] ++
+        management_body(Body)
+    };
+
 % Beacon
 frame_type(#ieee802_11_fc{type = 0, subtype = 8},
     <<Duration:?UINT16LE,
