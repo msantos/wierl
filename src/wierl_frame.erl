@@ -120,7 +120,8 @@ frame_type(#ieee802_11_fc{type = 0, subtype = 0},
     };
 
 % Association response
-frame_type(#ieee802_11_fc{type = 0, subtype = 1},
+% Re-association response
+frame_type(#ieee802_11_fc{type = 0, subtype = Subtype},
     <<Duration:?UINT16LE,
     DA:6/bytes, SA:6/bytes, BSSID:6/bytes,
     SeqCtl:?UINT16LE,
@@ -128,6 +129,28 @@ frame_type(#ieee802_11_fc{type = 0, subtype = 1},
     Capability:?UINT16LE,
     Status:?UINT16LE,
     Aid:?UINT16LE,
+
+    Body/binary>>) when Subtype == 1; Subtype == 3 ->
+    {#ieee802_11_management{
+            duration = Duration,
+            da = DA,
+            sa = SA,
+            bssid = BSSID,
+            seq_ctl = field(seq_ctl, SeqCtl)
+        },
+        [{capability, Capability}, {status_code, Status}, {aid, Aid}] ++
+        management_body(Body)
+    };
+
+% Re-association request
+frame_type(#ieee802_11_fc{type = 0, subtype = 2},
+    <<Duration:?UINT16LE,
+    DA:6/bytes, SA:6/bytes, BSSID:6/bytes,
+    SeqCtl:?UINT16LE,
+
+    Capability:?UINT16LE,
+    Listen:?UINT16LE,
+    AP:6/bytes,
 
     Body/binary>>) ->
     {#ieee802_11_management{
@@ -137,7 +160,7 @@ frame_type(#ieee802_11_fc{type = 0, subtype = 1},
             bssid = BSSID,
             seq_ctl = field(seq_ctl, SeqCtl)
         },
-        [{capability, Capability}, {status_code, Status, {aid, Aid}}] ++
+        [{capability, Capability}, {listen_interval, Listen}, {ap, AP}] ++
         management_body(Body)
     };
 
