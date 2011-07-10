@@ -36,7 +36,8 @@
 -export([
         open/1, close/1,
         decode/1, decode/2,
-        header/2, frame_control/1, frame_type/2
+        header/2, frame_control/1, frame_type/2,
+        field/2
     ]).
 
 -include("wierl.hrl").
@@ -184,9 +185,10 @@ header(#ieee802_11_radio{} = R, Bin) when is_binary(Bin) ->
     {lists:reverse(Header), Unknown}.
 
 
-%%
-%% Frames
-%%
+%%-------------------------------------------------------------------------
+%%% Frames
+%%-------------------------------------------------------------------------
+
 %% See: Section 7
 %% http://standards.ieee.org/getieee802/download/802.11-2007.pdf
 
@@ -244,7 +246,7 @@ frame_type(#ieee802_11_fc{type = 0, subtype = Subtype},
             da = DA,
             sa = SA,
             bssid = BSSID,
-            seq_ctl = SeqCtl
+            seq_ctl = field(seq_ctl, SeqCtl)
         }, Body};
 frame_type(#ieee802_11_fc{type = 0},
     #ieee802_11_management{
@@ -252,11 +254,11 @@ frame_type(#ieee802_11_fc{type = 0},
             da = DA,
             sa = SA,
             bssid = BSSID,
-            seq_ctl = SeqCtl
+            seq_ctl = {FragNum, SeqCtl}
         }) ->
     <<Duration:?UINT16LE,
     DA:6/bytes, SA:6/bytes, BSSID:6/bytes,
-    SeqCtl:?UINT16LE>>;
+    SeqCtl:12, FragNum:4>>;
 
 
 %%
@@ -363,7 +365,7 @@ frame_type(#ieee802_11_fc{type = 1,
             ra = RA,
             ta = TA,
             bar = BAR,
-            seq_ctl = SeqCtl
+            seq_ctl = field(seq_ctl, SeqCtl)
         }, <<>>};
 frame_type(#ieee802_11_fc{type = 1,
         subtype = 8},
@@ -372,10 +374,10 @@ frame_type(#ieee802_11_fc{type = 1,
             ra = RA,
             ta = TA,
             bar = BAR,
-            seq_ctl = SeqCtl
+            seq_ctl = {FragNum, SeqNum}
         }) ->
     <<Duration:?UINT16LE, RA:6/bytes, TA:6/bytes,
-    BAR:?UINT16LE, SeqCtl:?UINT16LE>>;
+    BAR:?UINT16LE, SeqNum:12, FragNum:4>>;
 
 % Block Ack (BlockAck)
 frame_type(#ieee802_11_fc{type = 1,
@@ -385,7 +387,7 @@ frame_type(#ieee802_11_fc{type = 1,
     {#ieee802_11_cf_ba{
             duration = Duration,
             ba = BA,
-            seq_ctl = SeqCtl,
+            seq_ctl = field(seq_ctl, SeqCtl),
             bitmap = Bitmap
         }, <<>>};
 frame_type(#ieee802_11_fc{type = 1,
@@ -393,10 +395,10 @@ frame_type(#ieee802_11_fc{type = 1,
     #ieee802_11_cf_ba{
             duration = Duration,
             ba = BA,
-            seq_ctl = SeqCtl,
+            seq_ctl = {FragNum, SeqNum},
             bitmap = Bitmap
         }) ->
-    <<Duration:?UINT16LE, BA:?UINT16LE, SeqCtl:?UINT16LE,
+    <<Duration:?UINT16LE, BA:?UINT16LE, SeqNum:12, FragNum:4,
     Bitmap:(128*8)>>;
 
 %%
@@ -488,6 +490,14 @@ frame_type(#ieee802_11_fc{type = 2,
 frame_type(#ieee802_11_fc{}, _Body) ->
     reserved.
 
+
+%%-------------------------------------------------------------------------
+%%% Fields
+%%-------------------------------------------------------------------------
+field(seq_ctl, N) ->
+    {N band 16#f, N bsr 4};
+field(_, N) ->
+    N.
 
 %%-------------------------------------------------------------------------
 %%% Internal functions
