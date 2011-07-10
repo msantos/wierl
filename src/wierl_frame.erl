@@ -116,8 +116,7 @@ frame_type(#ieee802_11_fc{type = 0, subtype = 0},
             seq_ctl = field(seq_ctl, SeqCtl)
         },
         [{capability, Capability}, {listen_interval, Listen}] ++
-        management_body(Body)
-    };
+        management_body(Body)};
 
 % Association response
 % Re-association response
@@ -139,8 +138,7 @@ frame_type(#ieee802_11_fc{type = 0, subtype = Subtype},
             seq_ctl = field(seq_ctl, SeqCtl)
         },
         [{capability, Capability}, {status_code, Status}, {aid, Aid}] ++
-        management_body(Body)
-    };
+        management_body(Body)};
 
 % Re-association request
 frame_type(#ieee802_11_fc{type = 0, subtype = 2},
@@ -161,8 +159,7 @@ frame_type(#ieee802_11_fc{type = 0, subtype = 2},
             seq_ctl = field(seq_ctl, SeqCtl)
         },
         [{capability, Capability}, {listen_interval, Listen}, {ap, AP}] ++
-        management_body(Body)
-    };
+        management_body(Body)};
 
 % Probe request
 frame_type(#ieee802_11_fc{type = 0, subtype = 4},
@@ -178,8 +175,7 @@ frame_type(#ieee802_11_fc{type = 0, subtype = 4},
             bssid = BSSID,
             seq_ctl = field(seq_ctl, SeqCtl)
         },
-        management_body(Body)
-    };
+        management_body(Body)};
 
 % Probe response
 frame_type(#ieee802_11_fc{type = 0, subtype = 5},
@@ -200,9 +196,7 @@ frame_type(#ieee802_11_fc{type = 0, subtype = 5},
             seq_ctl = field(seq_ctl, SeqCtl)
         },
         [{timestamp, Timestamp}, {beacon_interval, Beacon},
-            {capability, Capability}] ++
-        management_body(Body)
-    };
+            {capability, Capability}] ++ management_body(Body)};
 
 % Beacon
 frame_type(#ieee802_11_fc{type = 0, subtype = 8},
@@ -223,9 +217,7 @@ frame_type(#ieee802_11_fc{type = 0, subtype = 8},
             seq_ctl = field(seq_ctl, SeqCtl)
         },
         [{timestamp, Timestamp}, {interval, Interval},
-            {capability, Capability}] ++
-        management_body(Body)
-    };
+            {capability, Capability}] ++ management_body(Body)};
 
 % IBSS ATIM
 frame_type(#ieee802_11_fc{type = 0, subtype = 9},
@@ -254,7 +246,8 @@ frame_type(#ieee802_11_fc{type = 0, subtype = 10},
             sa = SA,
             bssid = BSSID,
             seq_ctl = field(seq_ctl, SeqCtl)
-        }, [{reason_code, Reason}, {vendor, Vendor}]};
+        },
+        [{reason_code, Reason}, {vendor, Vendor}]};
 
 % Authentication
 frame_type(#ieee802_11_fc{type = 0, subtype = 11},
@@ -275,9 +268,7 @@ frame_type(#ieee802_11_fc{type = 0, subtype = 11},
             seq_ctl = field(seq_ctl, SeqCtl)
         },
         [{auth_alg, Alg}, {auth_trans_seq_num, TransSeqNum},
-            {status_code, Status}] ++
-        management_body(Body)
-    };
+            {status_code, Status}] ++ management_body(Body)};
 
 % Deauthentication
 frame_type(#ieee802_11_fc{type = 0, subtype = 12},
@@ -293,8 +284,23 @@ frame_type(#ieee802_11_fc{type = 0, subtype = 12},
             bssid = BSSID,
             seq_ctl = field(seq_ctl, SeqCtl)
         },
-        [{reason_code, Reason}, {vendor, Vendor}]
-    };
+        [{reason_code, Reason}, {vendor, Vendor}]};
+
+% Action
+frame_type(#ieee802_11_fc{type = 0, subtype = 11},
+    <<Duration:?UINT16LE,
+    DA:6/bytes, SA:6/bytes, BSSID:6/bytes,
+    SeqCtl:?UINT16LE,
+
+    Category, Action/binary>>) ->
+    {#ieee802_11_management{
+            duration = Duration,
+            da = DA,
+            sa = SA,
+            bssid = BSSID,
+            seq_ctl = field(seq_ctl, SeqCtl)
+        },
+        [{category, Category}, {action_detail, Action}]};
 
 % Unhandled, valid management frames
 % Reserved: 0110-0111, 1110-1111
