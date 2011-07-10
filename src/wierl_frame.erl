@@ -183,7 +183,7 @@ frame_type(#ieee802_11_fc{type = 0, subtype = 5},
     DA:6/bytes, SA:6/bytes, BSSID:6/bytes,
     SeqCtl:?UINT16LE,
 
-    Timestamp:?UINT16LE,
+    Timestamp:8/bytes,
     Beacon:?UINT16LE,
     Capability:?UINT16LE,
 
