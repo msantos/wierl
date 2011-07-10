@@ -97,7 +97,46 @@ frame_control(#ieee802_11_fc{
 %%
 %% Management
 %%
-%% Reserved: 0110-0111, 1110-1111
+
+% Beacon
+frame_type(#ieee802_11_fc{type = 0, subtype = 8},
+    <<Duration:?UINT16LE,
+    DA:6/bytes, SA:6/bytes, BSSID:6/bytes,
+    SeqCtl:?UINT16LE,
+
+    % Frame body
+    Timestamp:8/bytes,
+    Interval:?UINT16LE,
+    Capabilities:?UINT16LE,
+
+    Body/binary>>) ->
+    {#ieee802_11_management{
+            duration = Duration,
+            da = DA,
+            sa = SA,
+            bssid = BSSID,
+            seq_ctl = field(seq_ctl, SeqCtl)
+        },
+        [{timestamp, Timestamp}, {interval, Interval},
+            {capabilities, Capabilities}] ++
+        management_body(Body)
+    };
+
+% IBSS ATIM
+frame_type(#ieee802_11_fc{type = 0, subtype = 9},
+    <<Duration:?UINT16LE,
+    DA:6/bytes, SA:6/bytes, BSSID:6/bytes,
+    SeqCtl:?UINT16LE>>) ->
+    {#ieee802_11_management{
+            duration = Duration,
+            da = DA,
+            sa = SA,
+            bssid = BSSID,
+            seq_ctl = field(seq_ctl, SeqCtl)
+        }, <<>>};
+
+% Unhandled, valid management frames
+% Reserved: 0110-0111, 1110-1111
 frame_type(#ieee802_11_fc{type = 0, subtype = Subtype},
     <<Duration:?UINT16LE, DA:6/bytes, SA:6/bytes, BSSID:6/bytes,
     SeqCtl:?UINT16LE, Body/binary>>) when Subtype band 6 /= 6 ->
@@ -362,3 +401,131 @@ field(_, N) ->
 %%-------------------------------------------------------------------------
 %%% Internal functions
 %%-------------------------------------------------------------------------
+
+% Management body elements
+element_to_atom(16#00) -> ssid;
+element_to_atom(16#01) -> rates;
+element_to_atom(16#02) -> fh;
+element_to_atom(16#03) -> ds;
+element_to_atom(16#04) -> cf;
+element_to_atom(16#05) -> tim;
+element_to_atom(16#06) -> ibss;
+element_to_atom(16#07) -> country;
+element_to_atom(16#08) -> fh_hop_param;
+element_to_atom(16#09) -> fh_hop_table;
+element_to_atom(16#0a) -> request;
+element_to_atom(16#0b) -> qbss_load;
+element_to_atom(16#0c) -> edca_param;
+element_to_atom(16#0d) -> tspec;
+element_to_atom(16#0e) -> tclas;
+element_to_atom(16#0f) -> schedule;
+element_to_atom(16#10) -> challenge;
+element_to_atom(16#20) -> power_constraint;
+element_to_atom(16#21) -> power_capability;
+element_to_atom(16#22) -> tpc_request;
+element_to_atom(16#23) -> tpc_report;
+element_to_atom(16#24) -> supported_channels;
+element_to_atom(16#25) -> channel_switch_ann;
+element_to_atom(16#26) -> measure_req;
+element_to_atom(16#27) -> measure_rep;
+element_to_atom(16#28) -> quiet;
+element_to_atom(16#29) -> ibss_dfs;
+element_to_atom(16#2a) -> erp_info;
+element_to_atom(16#2b) -> ts_delay;
+element_to_atom(16#2c) -> tclass_process;
+element_to_atom(16#2d) -> ht_capability;
+element_to_atom(16#2e) -> qos_capability;
+element_to_atom(16#2f) -> erp_info_old;
+element_to_atom(16#30) -> rsn_ie;
+element_to_atom(16#31) -> reserved;
+element_to_atom(16#32) -> ext_supp_rates;
+element_to_atom(16#34) -> neighor_report;
+element_to_atom(16#3d) -> ht_info;
+element_to_atom(16#3e) -> secondary_channel_offset;
+element_to_atom(16#45) -> wsie;
+element_to_atom(16#48) -> bss_co_ex_20_40;
+element_to_atom(16#49) -> bss_intol_ch_rep_20_40;
+element_to_atom(16#7f) -> extended_capabilities;
+element_to_atom(16#80) -> agere_proprietrary;
+element_to_atom(16#85) -> cisco_ccx1_ckip;
+element_to_atom(16#88) -> cisco_unknown_88;
+element_to_atom(16#95) -> cisco_unknown_95;
+element_to_atom(16#96) -> cisco_unknown_96;
+element_to_atom(16#dd) -> vendor_specific_ie;
+element_to_atom(16#ad) -> symbol_proprietrary;
+
+element_to_atom(ssid)-> 16#00;
+element_to_atom(rates)-> 16#01;
+element_to_atom(fh)-> 16#02;
+element_to_atom(ds)-> 16#03;
+element_to_atom(cf)-> 16#04;
+element_to_atom(tim)-> 16#05;
+element_to_atom(ibss)-> 16#06;
+element_to_atom(country)-> 16#07;
+element_to_atom(fh_hop_param)-> 16#08;
+element_to_atom(fh_hop_table)-> 16#09;
+element_to_atom(request)-> 16#0a;
+element_to_atom(qbss_load)-> 16#0b;
+element_to_atom(edca_param)-> 16#0c;
+element_to_atom(tspec)-> 16#0d;
+element_to_atom(tclas)-> 16#0e;
+element_to_atom(schedule)-> 16#0f;
+element_to_atom(challenge)-> 16#10;
+element_to_atom(power_constraint)-> 16#20;
+element_to_atom(power_capability)-> 16#21;
+element_to_atom(tpc_request)-> 16#22;
+element_to_atom(tpc_report)-> 16#23;
+element_to_atom(supported_channels)-> 16#24;
+element_to_atom(channel_switch_ann)-> 16#25;
+element_to_atom(measure_req)-> 16#26;
+element_to_atom(measure_rep)-> 16#27;
+element_to_atom(quiet)-> 16#28;
+element_to_atom(ibss_dfs)-> 16#29;
+element_to_atom(erp_info)-> 16#2a;
+element_to_atom(ts_delay)-> 16#2b;
+element_to_atom(tclass_process)-> 16#2c;
+element_to_atom(ht_capability)-> 16#2d;
+element_to_atom(qos_capability)-> 16#2e;
+element_to_atom(erp_info_old)-> 16#2f;
+element_to_atom(rsn_ie)-> 16#30;
+element_to_atom(reserved)-> 16#31;
+element_to_atom(ext_supp_rates)-> 16#32;
+element_to_atom(neighor_report)-> 16#34;
+element_to_atom(ht_info)-> 16#3d;
+element_to_atom(secondary_channel_offset)-> 16#3e;
+element_to_atom(wsie)-> 16#45;
+element_to_atom(bss_co_ex_20_40)-> 16#48;
+element_to_atom(bss_intol_ch_rep_20_40)-> 16#49;
+element_to_atom(extended_capabilities)-> 16#7f;
+element_to_atom(agere_proprietrary)-> 16#80;
+element_to_atom(cisco_ccx1_ckip)-> 16#85;
+element_to_atom(cisco_unknown_88)-> 16#88;
+element_to_atom(cisco_unknown_95)-> 16#95;
+element_to_atom(cisco_unknown_96)-> 16#96;
+element_to_atom(vendor_specific_ie)-> 16#dd;
+element_to_atom(symbol_proprietrary)-> 16#ad;
+
+element_to_atom(N) -> {unsupported, N}.
+
+
+management_body(Body) ->
+    management_body(Body, []).
+
+management_body(<<>>, Acc) ->
+    lists:reverse(Acc);
+
+management_body(<<?E_FH, _Len, Dwell:?UINT16LE, HopSet, HopPattern,
+    HopIndex, Rest/binary>>, Acc) ->
+    management_body(Rest, [{fh, Dwell, HopSet, HopPattern, HopIndex}|Acc]);
+
+management_body(<<?E_CF, _Len, Count, Period, MaxDuration:?UINT16LE,
+    DurationRemaining:?UINT16LE, Rest/binary>>, Acc) ->
+    management_body(Rest, [{cf, Count, Period, MaxDuration, DurationRemaining}|Acc]);
+
+management_body(<<?E_TIM, Len, Count, Period, BitmapControl, Rest/binary>>, Acc) ->
+    Size = Len-3,
+    <<Bitmap:Size/bytes, Rest1/binary>> = Rest,
+    management_body(Rest1, [{tim, Count, Period, BitmapControl, Bitmap}|Acc]);
+
+management_body(<<Type, Len, Element:Len/bytes, Rest/binary>>, Acc) ->
+    management_body(Rest, [{element_to_atom(Type), Element}|Acc]).
