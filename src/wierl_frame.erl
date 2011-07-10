@@ -98,6 +98,27 @@ frame_control(#ieee802_11_fc{
 %% Management
 %%
 
+% Association request
+frame_type(#ieee802_11_fc{type = 0, subtype = 0},
+    <<Duration:?UINT16LE,
+    DA:6/bytes, SA:6/bytes, BSSID:6/bytes,
+    SeqCtl:?UINT16LE,
+
+    Capability:?UINT16LE,
+    Listen:?UINT16LE,
+
+    Body/binary>>) ->
+    {#ieee802_11_management{
+            duration = Duration,
+            da = DA,
+            sa = SA,
+            bssid = BSSID,
+            seq_ctl = field(seq_ctl, SeqCtl)
+        },
+        [{capability, Capability}, {listen_interval, Listen}] ++
+        management_body(Body)
+    };
+
 % Beacon
 frame_type(#ieee802_11_fc{type = 0, subtype = 8},
     <<Duration:?UINT16LE,
@@ -107,7 +128,7 @@ frame_type(#ieee802_11_fc{type = 0, subtype = 8},
     % Frame body
     Timestamp:8/bytes,
     Interval:?UINT16LE,
-    Capabilities:?UINT16LE,
+    Capability:?UINT16LE,
 
     Body/binary>>) ->
     {#ieee802_11_management{
@@ -118,7 +139,7 @@ frame_type(#ieee802_11_fc{type = 0, subtype = 8},
             seq_ctl = field(seq_ctl, SeqCtl)
         },
         [{timestamp, Timestamp}, {interval, Interval},
-            {capabilities, Capabilities}] ++
+            {capability, Capability}] ++
         management_body(Body)
     };
 
