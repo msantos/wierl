@@ -430,7 +430,7 @@ frame_type(#ieee802_11_fc{type = 1,
             duration = Duration,
             ra = RA,
             ta = TA,
-            bar = BAR,
+            bar = {BAR band 16#0fff, BAR bsr 12},
             seq_ctl = field(seq_ctl, SeqCtl)
         }, <<>>};
 frame_type(#ieee802_11_fc{type = 1,
@@ -439,11 +439,11 @@ frame_type(#ieee802_11_fc{type = 1,
             duration = Duration,
             ra = RA,
             ta = TA,
-            bar = BAR,
+            bar = {Reserved, TID},
             seq_ctl = {FragNum, SeqNum}
         }) ->
     <<Duration:?UINT16LE, RA:6/bytes, TA:6/bytes,
-    BAR:?UINT16LE, SeqNum:12, FragNum:4>>;
+    TID:4, Reserved:12, SeqNum:12, FragNum:4>>;
 
 % Block Ack (BlockAck)
 frame_type(#ieee802_11_fc{type = 1,
@@ -452,7 +452,7 @@ frame_type(#ieee802_11_fc{type = 1,
     Bitmap:128/bytes>>) ->
     {#ieee802_11_cf_ba{
             duration = Duration,
-            ba = BA,
+            ba = {BA band 16#0fff, BA bsr 12},
             seq_ctl = field(seq_ctl, SeqCtl),
             bitmap = Bitmap
         }, <<>>};
@@ -460,12 +460,12 @@ frame_type(#ieee802_11_fc{type = 1,
         subtype = 8},
     #ieee802_11_cf_ba{
             duration = Duration,
-            ba = BA,
+            ba = {Reserved, TID},
             seq_ctl = {FragNum, SeqNum},
             bitmap = Bitmap
         }) ->
-    <<Duration:?UINT16LE, BA:?UINT16LE, SeqNum:12, FragNum:4,
-    Bitmap:(128*8)>>;
+    <<Duration:?UINT16LE, TID:4, Reserved:12, SeqNum:12,
+    FragNum:4, Bitmap:(128*8)>>;
 
 %%
 %% Data
