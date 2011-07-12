@@ -34,8 +34,7 @@
 %%
 -module(wierl_radiotap).
 -export([
-        header/1,
-        extension/2
+        header/1
     ]).
 
 -include("wierl.hrl").
@@ -54,7 +53,7 @@ header(<<Version:8, Pad:8, Len:?UINT16LE,
     Frame/binary>>) ->
 
     Size = Len-8,
-    <<Extensions:Size/bytes, Data/binary>> = Frame,
+    <<Header:Size/bytes, Data/binary>> = Frame,
 
     <<Ext:1,
     Vendor_namespace:1,
@@ -81,42 +80,46 @@ header(<<Version:8, Pad:8, Len:?UINT16LE,
     Flags:1,
     Tsft:1>> = <<Present:32>>,
 
+    Bitmap = [ K || {K,V} <-
+        [
+            {tsft, Tsft},
+            {flags, Flags},
+            {rate, Rate},
+            {channel, Channel},
+            {fhss, Fhss},
+            {dbm_antsignal, Dbm_antsignal},
+            {dbm_antnoise, Dbm_antnoise},
+            {lock_quality, Lock_quality},
+            {tx_attenuation, Tx_attenuation},
+            {db_tx_attenuation, Db_tx_attenuation},
+            {dbm_tx_power, Dbm_tx_power},
+            {antenna, Antenna},
+            {db_antsignal, Db_antsignal},
+            {db_antnoise, Db_antnoise},
+            {rx_flags, Rx_flags},
+            {xchannel, Xchannel},
+            {mcs, Mcs},
+            {vendor_namepsace, Vendor_namespace},
+            {ext, Ext}
+        ], V == 1 ],
+
+    {Extensions, Unknown} = extension(Bitmap, Header),
+
     {#ieee802_11_radiotap{
         version = Version,
         pad = Pad,
         len = Len,
-        present = [ K || {K,V} <-
-                [
-                    {tsft, Tsft},
-                    {flags, Flags},
-                    {rate, Rate},
-                    {channel, Channel},
-                    {fhss, Fhss},
-                    {dbm_antsignal, Dbm_antsignal},
-                    {dbm_antnoise, Dbm_antnoise},
-                    {lock_quality, Lock_quality},
-                    {tx_attenuation, Tx_attenuation},
-                    {db_tx_attenuation, Db_tx_attenuation},
-                    {dbm_tx_power, Dbm_tx_power},
-                    {antenna, Antenna},
-                    {db_antsignal, Db_antsignal},
-                    {db_antnoise, Db_antnoise},
-                    {rx_flags, Rx_flags},
-                    {xchannel, Xchannel},
-                    {mcs, Mcs},
-                    {vendor_namepsace, Vendor_namespace},
-                    {ext, Ext}
-                ], V == 1 ]
-    }, Extensions, Data}.
+        present = Extensions,
+        unknown = Unknown
+    }, Data}.
 
-extension(#ieee802_11_radiotap{} = Radiotap, Extensions) when is_binary(Extensions) ->
+extension(Bitmap, Extensions) when is_list(Bitmap), is_binary(Extensions) ->
     {Header, Unknown} = lists:foldl(
         fun (Type, {Present, Data}) ->
                 {Decoded, Rest} = field(Type, Data),
                 {[Decoded|Present], Rest}
         end,
-        {[], Extensions},
-        Radiotap#ieee802_11_radiotap.present),
+        {[], Extensions}, Bitmap),
     {lists:reverse(Header), Unknown}.
 
 

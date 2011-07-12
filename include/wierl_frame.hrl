@@ -48,7 +48,8 @@
         version = 0,
         pad = 0,
         len = 0,
-        present = []
+        present = [],
+        unknown = <<>>
     }).
 
 -record(ieee802_11_fc, {
