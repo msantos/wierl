@@ -85,7 +85,7 @@ header(<<Version:8, Pad:8, Len:?UINT16LE,
         version = Version,
         pad = Pad,
         len = Len,
-        present = [ {K, bool(V)} || {K,V} <-
+        present = [ K || {K,V} <-
                 [
                     {tsft, Tsft},
                     {flags, Flags},
@@ -106,17 +106,16 @@ header(<<Version:8, Pad:8, Len:?UINT16LE,
                     {mcs, Mcs},
                     {vendor_namepsace, Vendor_namespace},
                     {ext, Ext}
-                ] ]
+                ], V == 1 ]
     }, Extensions, Data}.
 
-extension(#ieee802_11_radiotap{} = Radiotap, Bitmap) when is_binary(Bitmap) ->
+extension(#ieee802_11_radiotap{} = Radiotap, Extensions) when is_binary(Extensions) ->
     {Header, Unknown} = lists:foldl(
-        fun ({Type, true}, {Present, Data}) ->
+        fun (Type, {Present, Data}) ->
                 {Decoded, Rest} = field(Type, Data),
-                {[Decoded|Present], Rest};
-            ({_Type, false}, Present) -> Present
+                {[Decoded|Present], Rest}
         end,
-        {[], Bitmap},
+        {[], Extensions},
         Radiotap#ieee802_11_radiotap.present),
     {lists:reverse(Header), Unknown}.
 
@@ -183,5 +182,3 @@ field(vendor_namespace, <<OUI1:8, OUI2:8, OUI3:8, Subspace:8, Len:?UINT16, Data/
 %%-------------------------------------------------------------------------
 %%% Internal functions
 %%-------------------------------------------------------------------------
-bool(0) -> false;
-bool(1) -> true.
