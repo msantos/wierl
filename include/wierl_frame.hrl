@@ -63,7 +63,8 @@
         power_management = 0,
         more_data = 0,
         protected = 0,
-        order = 0
+        order = 0,
+        body = []
     }).
 
 -record(ieee802_11_management, {
@@ -71,35 +72,41 @@
         seq_ctl = 0,
         sa = <<0,0,0,0,0,0>>,
         da = <<0,0,0,0,0,0>>,
-        bssid = <<0,0,0,0,0,0>>
+        bssid = <<0,0,0,0,0,0>>,
+        body = []
     }).
 
 -record(ieee802_11_cf_rts, {
         duration = 0,
         ra = <<0,0,0,0,0,0>>,
-        ta = <<0,0,0,0,0,0>>
+        ta = <<0,0,0,0,0,0>>,
+        body = []
     }).
 
 -record(ieee802_11_cf_cts, {
         duration = 0,
-        ra = <<0,0,0,0,0,0>>
+        ra = <<0,0,0,0,0,0>>,
+        body = []
     }).
 
 -record(ieee802_11_cf_ack, {
         duration = 0,
-        ra = <<0,0,0,0,0,0>>
+        ra = <<0,0,0,0,0,0>>,
+        body = []
     }).
 
 -record(ieee802_11_cf_ps, {
         aid = 0,
         bssid = <<0,0,0,0,0,0>>,
-        ta = <<0,0,0,0,0,0>>
+        ta = <<0,0,0,0,0,0>>,
+        body = []
     }).
 
 -record(ieee802_11_cf_cfend, {
         duration = 0,
         ra = <<0,0,0,0,0,0>>,
-        bssid = <<0,0,0,0,0,0>>
+        bssid = <<0,0,0,0,0,0>>,
+        body = []
     }).
 
 -record(ieee802_11_cf_bar, {
@@ -107,14 +114,16 @@
         ra = <<0,0,0,0,0,0>>,
         ta = <<0,0,0,0,0,0>>,
         bar = 0,
-        seq_ctl = 0
+        seq_ctl = 0,
+        body = []
     }).
 
 -record(ieee802_11_cf_ba, {
         duration = 0,
         ba = 0,
         seq_ctl = 0,
-        bitmap = <<>>
+        bitmap = <<>>,
+        body = []
     }).
 
 -record(ieee802_11_data, {
@@ -123,5 +132,6 @@
         sa = <<0,0,0,0,0,0>>,
         ra = <<0,0,0,0,0,0>>,
         ta = <<0,0,0,0,0,0>>,
-        bssid = <<0,0,0,0,0,0>>
+        bssid = <<0,0,0,0,0,0>>,
+        body = []
     }).

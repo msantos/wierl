@@ -108,15 +108,16 @@ frame_type(#ieee802_11_fc{type = 0, subtype = 0},
     Listen:?UINT16LE,
 
     Body/binary>>) ->
-    {#ieee802_11_management{
+    #ieee802_11_management{
             duration = Duration,
             da = DA,
             sa = SA,
             bssid = BSSID,
-            seq_ctl = field(seq_ctl, SeqCtl)
-        },
-        [{capability, Capability}, {listen_interval, Listen}] ++
-        management_body(Body)};
+            seq_ctl = field(seq_ctl, SeqCtl),
+
+            body = [{capability, Capability}, {listen_interval, Listen}] ++
+                management_body(Body)
+    };
 
 % Association response
 % Re-association response
@@ -130,15 +131,16 @@ frame_type(#ieee802_11_fc{type = 0, subtype = Subtype},
     Aid:?UINT16LE,
 
     Body/binary>>) when Subtype == 1; Subtype == 3 ->
-    {#ieee802_11_management{
+    #ieee802_11_management{
             duration = Duration,
             da = DA,
             sa = SA,
             bssid = BSSID,
-            seq_ctl = field(seq_ctl, SeqCtl)
-        },
-        [{capability, Capability}, {status_code, Status}, {aid, Aid}] ++
-        management_body(Body)};
+            seq_ctl = field(seq_ctl, SeqCtl),
+
+            body = [{capability, Capability}, {status_code, Status}, {aid, Aid}] ++
+                management_body(Body)
+    };
 
 % Re-association request
 frame_type(#ieee802_11_fc{type = 0, subtype = 2},
@@ -151,15 +153,16 @@ frame_type(#ieee802_11_fc{type = 0, subtype = 2},
     AP:6/bytes,
 
     Body/binary>>) ->
-    {#ieee802_11_management{
+    #ieee802_11_management{
             duration = Duration,
             da = DA,
             sa = SA,
             bssid = BSSID,
-            seq_ctl = field(seq_ctl, SeqCtl)
-        },
-        [{capability, Capability}, {listen_interval, Listen}, {ap, AP}] ++
-        management_body(Body)};
+            seq_ctl = field(seq_ctl, SeqCtl),
+
+            body = [{capability, Capability}, {listen_interval, Listen}, {ap, AP}] ++
+                management_body(Body)
+    };
 
 % Probe request
 frame_type(#ieee802_11_fc{type = 0, subtype = 4},
@@ -168,14 +171,15 @@ frame_type(#ieee802_11_fc{type = 0, subtype = 4},
     SeqCtl:?UINT16LE,
 
     Body/binary>>) ->
-    {#ieee802_11_management{
+    #ieee802_11_management{
             duration = Duration,
             da = DA,
             sa = SA,
             bssid = BSSID,
-            seq_ctl = field(seq_ctl, SeqCtl)
-        },
-        management_body(Body)};
+            seq_ctl = field(seq_ctl, SeqCtl),
+
+            body = management_body(Body)
+    };
 
 % Probe response
 frame_type(#ieee802_11_fc{type = 0, subtype = 5},
@@ -188,15 +192,16 @@ frame_type(#ieee802_11_fc{type = 0, subtype = 5},
     Capability:?UINT16LE,
 
     Body/binary>>) ->
-    {#ieee802_11_management{
+    #ieee802_11_management{
             duration = Duration,
             da = DA,
             sa = SA,
             bssid = BSSID,
-            seq_ctl = field(seq_ctl, SeqCtl)
-        },
-        [{timestamp, Timestamp}, {beacon_interval, Beacon},
-            {capability, Capability}] ++ management_body(Body)};
+            seq_ctl = field(seq_ctl, SeqCtl),
+
+            body = [{timestamp, Timestamp}, {beacon_interval, Beacon},
+                {capability, Capability}] ++ management_body(Body)
+    };
 
 % Beacon
 frame_type(#ieee802_11_fc{type = 0, subtype = 8},
@@ -209,28 +214,29 @@ frame_type(#ieee802_11_fc{type = 0, subtype = 8},
     Capability:?UINT16LE,
 
     Body/binary>>) ->
-    {#ieee802_11_management{
+    #ieee802_11_management{
             duration = Duration,
             da = DA,
             sa = SA,
             bssid = BSSID,
-            seq_ctl = field(seq_ctl, SeqCtl)
-        },
-        [{timestamp, Timestamp}, {interval, Interval},
-            {capability, Capability}] ++ management_body(Body)};
+            seq_ctl = field(seq_ctl, SeqCtl),
+
+            body = [{timestamp, Timestamp}, {interval, Interval},
+                {capability, Capability}] ++ management_body(Body)
+    };
 
 % IBSS ATIM
 frame_type(#ieee802_11_fc{type = 0, subtype = 9},
     <<Duration:?UINT16LE,
     DA:6/bytes, SA:6/bytes, BSSID:6/bytes,
     SeqCtl:?UINT16LE>>) ->
-    {#ieee802_11_management{
+    #ieee802_11_management{
             duration = Duration,
             da = DA,
             sa = SA,
             bssid = BSSID,
             seq_ctl = field(seq_ctl, SeqCtl)
-        }, []};
+    };
 
 % Disassociation
 frame_type(#ieee802_11_fc{type = 0, subtype = 10},
@@ -240,14 +246,15 @@ frame_type(#ieee802_11_fc{type = 0, subtype = 10},
 
     Reason:?UINT16LE, Vendor/binary
     >>) ->
-    {#ieee802_11_management{
+    #ieee802_11_management{
             duration = Duration,
             da = DA,
             sa = SA,
             bssid = BSSID,
-            seq_ctl = field(seq_ctl, SeqCtl)
-        },
-        [{reason_code, Reason}, {vendor, Vendor}]};
+            seq_ctl = field(seq_ctl, SeqCtl),
+
+            body = [{reason_code, Reason}, {vendor, Vendor}]
+    };
 
 % Authentication
 frame_type(#ieee802_11_fc{type = 0, subtype = 11},
@@ -260,15 +267,16 @@ frame_type(#ieee802_11_fc{type = 0, subtype = 11},
     Status:?UINT16LE,
 
     Body/binary>>) ->
-    {#ieee802_11_management{
+    #ieee802_11_management{
             duration = Duration,
             da = DA,
             sa = SA,
             bssid = BSSID,
-            seq_ctl = field(seq_ctl, SeqCtl)
-        },
-        [{auth_alg, Alg}, {auth_trans_seq_num, TransSeqNum},
-            {status_code, Status}] ++ management_body(Body)};
+            seq_ctl = field(seq_ctl, SeqCtl),
+
+            body = [{auth_alg, Alg}, {auth_trans_seq_num, TransSeqNum},
+                {status_code, Status}] ++ management_body(Body)
+    };
 
 % Deauthentication
 frame_type(#ieee802_11_fc{type = 0, subtype = 12},
@@ -277,14 +285,15 @@ frame_type(#ieee802_11_fc{type = 0, subtype = 12},
     SeqCtl:?UINT16LE,
 
     Reason:?UINT16LE, Vendor/binary>>) ->
-    {#ieee802_11_management{
+    #ieee802_11_management{
             duration = Duration,
             da = DA,
             sa = SA,
             bssid = BSSID,
-            seq_ctl = field(seq_ctl, SeqCtl)
-        },
-        [{reason_code, Reason}, {vendor, Vendor}]};
+            seq_ctl = field(seq_ctl, SeqCtl),
+
+            body = [{reason_code, Reason}, {vendor, Vendor}]
+    };
 
 % Action
 frame_type(#ieee802_11_fc{type = 0, subtype = 11},
@@ -293,38 +302,43 @@ frame_type(#ieee802_11_fc{type = 0, subtype = 11},
     SeqCtl:?UINT16LE,
 
     Category, Action/binary>>) ->
-    {#ieee802_11_management{
+    #ieee802_11_management{
             duration = Duration,
             da = DA,
             sa = SA,
             bssid = BSSID,
-            seq_ctl = field(seq_ctl, SeqCtl)
-        },
-        [{category, Category}, {action_detail, Action}]};
+            seq_ctl = field(seq_ctl, SeqCtl),
+
+            body = [{category, Category}, {action_detail, Action}]
+    };
 
 % Unhandled, valid management frames
 % Reserved: 0110-0111, 1110-1111
 frame_type(#ieee802_11_fc{type = 0, subtype = Subtype},
     <<Duration:?UINT16LE, DA:6/bytes, SA:6/bytes, BSSID:6/bytes,
     SeqCtl:?UINT16LE, Body/binary>>) when Subtype band 6 /= 6 ->
-    {#ieee802_11_management{
+    #ieee802_11_management{
             duration = Duration,
             da = DA,
             sa = SA,
             bssid = BSSID,
-            seq_ctl = field(seq_ctl, SeqCtl)
-        }, Body};
+            seq_ctl = field(seq_ctl, SeqCtl),
+
+            body = Body
+    };
 frame_type(#ieee802_11_fc{type = 0},
     #ieee802_11_management{
             duration = Duration,
             da = DA,
             sa = SA,
             bssid = BSSID,
-            seq_ctl = {FragNum, SeqCtl}
+            seq_ctl = {FragNum, SeqCtl},
+
+            body = Body
         }) ->
     <<Duration:?UINT16LE,
     DA:6/bytes, SA:6/bytes, BSSID:6/bytes,
-    SeqCtl:12, FragNum:4>>;
+    SeqCtl:12, FragNum:4, (elements_to_bin(Body))/binary>>;
 
 
 %%
@@ -336,11 +350,11 @@ frame_type(#ieee802_11_fc{type = 1,
         subtype = 16#B},
     <<Duration:?UINT16LE,
     RA:6/bytes, TA:6/bytes>>) ->
-    {#ieee802_11_cf_rts{
+    #ieee802_11_cf_rts{
             duration = Duration,
             ra = RA,
             ta = TA
-        }, <<>>};
+    };
 frame_type(#ieee802_11_fc{type = 1,
         subtype = 16#B},
     #ieee802_11_cf_rts{
@@ -355,10 +369,10 @@ frame_type(#ieee802_11_fc{type = 1,
 frame_type(#ieee802_11_fc{type = 1,
         subtype = 16#C},
     <<Duration:?UINT16LE, RA:6/bytes>>) ->
-    {#ieee802_11_cf_cts{
+    #ieee802_11_cf_cts{
             duration = Duration,
             ra = RA
-        }, <<>>};
+    };
 frame_type(#ieee802_11_fc{type = 1,
         subtype = 16#C},
     #ieee802_11_cf_cts{
@@ -371,10 +385,10 @@ frame_type(#ieee802_11_fc{type = 1,
 frame_type(#ieee802_11_fc{type = 1,
         subtype = 16#D},
     <<Duration:?UINT16LE, RA:6/bytes>>) ->
-    {#ieee802_11_cf_ack{
+    #ieee802_11_cf_ack{
             duration = Duration,
             ra = RA
-        }, <<>>};
+    };
 frame_type(#ieee802_11_fc{type = 1,
         subtype = 16#D},
     #ieee802_11_cf_ack{
@@ -387,11 +401,11 @@ frame_type(#ieee802_11_fc{type = 1,
 frame_type(#ieee802_11_fc{type = 1,
         subtype = 16#A},
     <<AID:?UINT16LE, BSSID:6/bytes, TA:6/bytes>>) ->
-    {#ieee802_11_cf_ps{
+    #ieee802_11_cf_ps{
             aid = AID,
             bssid = BSSID,
             ta = TA
-        }, <<>>};
+    };
 frame_type(#ieee802_11_fc{type = 1,
         subtype = 16#A},
     #ieee802_11_cf_ps{
@@ -406,11 +420,11 @@ frame_type(#ieee802_11_fc{type = 1,
         subtype = Subtype},
     <<Duration:?UINT16LE, RA:6/bytes, BSSID:6/bytes>>)
     when Subtype == 16#E; Subtype == 16#F ->
-    {#ieee802_11_cf_cfend{
+    #ieee802_11_cf_cfend{
             duration = Duration,
             ra = RA,
             bssid = BSSID
-        }, <<>>};
+    };
 frame_type(#ieee802_11_fc{type = 1,
         subtype = Subtype},
     #ieee802_11_cf_cfend{
@@ -426,13 +440,13 @@ frame_type(#ieee802_11_fc{type = 1,
         subtype = 8},
     <<Duration:?UINT16LE, RA:6/bytes, TA:6/bytes,
     BAR:?UINT16LE, SeqCtl:?UINT16LE>>) ->
-    {#ieee802_11_cf_bar{
+    #ieee802_11_cf_bar{
             duration = Duration,
             ra = RA,
             ta = TA,
             bar = {BAR band 16#0fff, BAR bsr 12},
             seq_ctl = field(seq_ctl, SeqCtl)
-        }, <<>>};
+    };
 frame_type(#ieee802_11_fc{type = 1,
         subtype = 8},
     #ieee802_11_cf_bar{
@@ -450,12 +464,12 @@ frame_type(#ieee802_11_fc{type = 1,
         subtype = 9},
     <<Duration:?UINT16LE, BA:?UINT16LE, SeqCtl:?UINT16LE,
     Bitmap:128/bytes>>) ->
-    {#ieee802_11_cf_ba{
+    #ieee802_11_cf_ba{
             duration = Duration,
             ba = {BA band 16#0fff, BA bsr 12},
             seq_ctl = field(seq_ctl, SeqCtl),
             bitmap = Bitmap
-        }, <<>>};
+    };
 frame_type(#ieee802_11_fc{type = 1,
         subtype = 8},
     #ieee802_11_cf_ba{
@@ -473,71 +487,88 @@ frame_type(#ieee802_11_fc{type = 1,
 frame_type(#ieee802_11_fc{type = 2,
     to_ds = 0, from_ds = 0},
     <<Duration:?UINT16LE, DA:6/bytes, SA:6/bytes, BSSID:6/bytes, Body/binary>>) ->
-    {#ieee802_11_data{
+    #ieee802_11_data{
             duration = Duration,
             da = DA,
             sa = SA,
-            bssid = BSSID
-        }, Body};
+            bssid = BSSID,
+
+            body = Body
+    };
 frame_type(#ieee802_11_fc{type = 2,
     to_ds = 0, from_ds = 0},
     #ieee802_11_data{
             duration = Duration,
             da = DA,
             sa = SA,
-            bssid = BSSID
+            bssid = BSSID,
+
+            body = Body
         }) ->
-    <<Duration:?UINT16LE, DA:6/bytes, SA:6/bytes, BSSID:6/bytes>>;
+    <<Duration:?UINT16LE, DA:6/bytes, SA:6/bytes, BSSID:6/bytes,
+    (elements_to_bin(Body))/binary>>;
 
 frame_type(#ieee802_11_fc{type = 2,
     to_ds = 0, from_ds = 1},
     <<Duration:?UINT16LE, DA:6/bytes, BSSID:6/bytes, SA:6/bytes, Body/binary>>) ->
-    {#ieee802_11_data{
+    #ieee802_11_data{
             duration = Duration,
             da = DA,
             sa = SA,
-            bssid = BSSID
-        }, Body};
+            bssid = BSSID,
+
+            body = Body
+    };
 frame_type(#ieee802_11_fc{type = 2,
     to_ds = 0, from_ds = 1},
     #ieee802_11_data{
             duration = Duration,
             da = DA,
             sa = SA,
-            bssid = BSSID
+            bssid = BSSID,
+
+            body = Body
         }) ->
-    <<Duration:?UINT16LE, DA:6/bytes, BSSID:6/bytes, SA:6/bytes>>;
+    <<Duration:?UINT16LE, DA:6/bytes, BSSID:6/bytes, SA:6/bytes,
+    (elements_to_bin(Body))/binary>>;
 
 frame_type(#ieee802_11_fc{type = 2,
     to_ds = 1, from_ds = 0},
     <<Duration:?UINT16LE, BSSID:6/bytes, SA:6/bytes, DA:6/bytes, Body/binary>>) ->
-    {#ieee802_11_data{
+    #ieee802_11_data{
             duration = Duration,
             da = DA,
             sa = SA,
-            bssid = BSSID
-        }, Body};
+            bssid = BSSID,
+
+            body = Body
+    };
 frame_type(#ieee802_11_fc{type = 2,
     to_ds = 1, from_ds = 0},
     #ieee802_11_data{
             duration = Duration,
             da = DA,
             sa = SA,
-            bssid = BSSID
+            bssid = BSSID,
+
+            body = Body
         }) ->
-    <<Duration:?UINT16LE, BSSID:6/bytes, SA:6/bytes, DA:6/bytes>>;
+    <<Duration:?UINT16LE, BSSID:6/bytes, SA:6/bytes, DA:6/bytes,
+    (elements_to_bin(Body))/binary>>;
 
 frame_type(#ieee802_11_fc{type = 2,
     to_ds = 1, from_ds = 1},
     <<Duration:?UINT16LE, RA:6/bytes, TA:6/bytes, DA:6/bytes,
     SA:6/bytes, Body/binary>>) ->
-    {#ieee802_11_data{
+    #ieee802_11_data{
             duration = Duration,
             ra = RA,
             ta = TA,
             da = DA,
-            sa = SA
-        }, Body};
+            sa = SA,
+
+            body = Body
+    };
 frame_type(#ieee802_11_fc{type = 2,
     to_ds = 1, from_ds = 1},
     #ieee802_11_data{
@@ -545,10 +576,12 @@ frame_type(#ieee802_11_fc{type = 2,
             ra = RA,
             ta = TA,
             da = DA,
-            sa = SA
+            sa = SA,
+
+            body = Body
         }) ->
     <<Duration:?UINT16LE, RA:6/bytes, TA:6/bytes, DA:6/bytes,
-    SA:6/bytes>>;
+    SA:6/bytes, (elements_to_bin(Body))/binary>>;
 
 %%
 %% Reserved
@@ -570,109 +603,117 @@ field(_, N) ->
 %%-------------------------------------------------------------------------
 
 % Management body elements
-element_to_atom(16#00) -> ssid;
-element_to_atom(16#01) -> rates;
-element_to_atom(16#02) -> fh;
-element_to_atom(16#03) -> ds;
-element_to_atom(16#04) -> cf;
-element_to_atom(16#05) -> tim;
-element_to_atom(16#06) -> ibss;
-element_to_atom(16#07) -> country;
-element_to_atom(16#08) -> fh_hop_param;
-element_to_atom(16#09) -> fh_hop_table;
-element_to_atom(16#0a) -> request;
-element_to_atom(16#0b) -> qbss_load;
-element_to_atom(16#0c) -> edca_param;
-element_to_atom(16#0d) -> tspec;
-element_to_atom(16#0e) -> tclas;
-element_to_atom(16#0f) -> schedule;
-element_to_atom(16#10) -> challenge;
-element_to_atom(16#20) -> power_constraint;
-element_to_atom(16#21) -> power_capability;
-element_to_atom(16#22) -> tpc_request;
-element_to_atom(16#23) -> tpc_report;
-element_to_atom(16#24) -> supported_channels;
-element_to_atom(16#25) -> channel_switch_ann;
-element_to_atom(16#26) -> measure_req;
-element_to_atom(16#27) -> measure_rep;
-element_to_atom(16#28) -> quiet;
-element_to_atom(16#29) -> ibss_dfs;
-element_to_atom(16#2a) -> erp_info;
-element_to_atom(16#2b) -> ts_delay;
-element_to_atom(16#2c) -> tclass_process;
-element_to_atom(16#2d) -> ht_capability;
-element_to_atom(16#2e) -> qos_capability;
-element_to_atom(16#2f) -> erp_info_old;
-element_to_atom(16#30) -> rsn_ie;
-element_to_atom(16#31) -> reserved;
-element_to_atom(16#32) -> ext_supp_rates;
-element_to_atom(16#34) -> neighor_report;
-element_to_atom(16#3d) -> ht_info;
-element_to_atom(16#3e) -> secondary_channel_offset;
-element_to_atom(16#45) -> wsie;
-element_to_atom(16#48) -> bss_co_ex_20_40;
-element_to_atom(16#49) -> bss_intol_ch_rep_20_40;
-element_to_atom(16#7f) -> extended_capabilities;
-element_to_atom(16#80) -> agere_proprietrary;
-element_to_atom(16#85) -> cisco_ccx1_ckip;
-element_to_atom(16#88) -> cisco_unknown_88;
-element_to_atom(16#95) -> cisco_unknown_95;
-element_to_atom(16#96) -> cisco_unknown_96;
-element_to_atom(16#dd) -> vendor_specific_ie;
-element_to_atom(16#ad) -> symbol_proprietrary;
+element_type(16#00) -> ssid;
+element_type(16#01) -> rates;
+element_type(16#02) -> fh;
+element_type(16#03) -> ds;
+element_type(16#04) -> cf;
+element_type(16#05) -> tim;
+element_type(16#06) -> ibss;
+element_type(16#07) -> country;
+element_type(16#08) -> fh_hop_param;
+element_type(16#09) -> fh_hop_table;
+element_type(16#0a) -> request;
+element_type(16#0b) -> qbss_load;
+element_type(16#0c) -> edca_param;
+element_type(16#0d) -> tspec;
+element_type(16#0e) -> tclas;
+element_type(16#0f) -> schedule;
+element_type(16#10) -> challenge;
+element_type(16#20) -> power_constraint;
+element_type(16#21) -> power_capability;
+element_type(16#22) -> tpc_request;
+element_type(16#23) -> tpc_report;
+element_type(16#24) -> supported_channels;
+element_type(16#25) -> channel_switch_ann;
+element_type(16#26) -> measure_req;
+element_type(16#27) -> measure_rep;
+element_type(16#28) -> quiet;
+element_type(16#29) -> ibss_dfs;
+element_type(16#2a) -> erp_info;
+element_type(16#2b) -> ts_delay;
+element_type(16#2c) -> tclass_process;
+element_type(16#2d) -> ht_capability;
+element_type(16#2e) -> qos_capability;
+element_type(16#2f) -> erp_info_old;
+element_type(16#30) -> rsn_ie;
+element_type(16#31) -> reserved;
+element_type(16#32) -> ext_supp_rates;
+element_type(16#34) -> neighor_report;
+element_type(16#3d) -> ht_info;
+element_type(16#3e) -> secondary_channel_offset;
+element_type(16#45) -> wsie;
+element_type(16#48) -> bss_co_ex_20_40;
+element_type(16#49) -> bss_intol_ch_rep_20_40;
+element_type(16#7f) -> extended_capabilities;
+element_type(16#80) -> agere_proprietrary;
+element_type(16#85) -> cisco_ccx1_ckip;
+element_type(16#88) -> cisco_unknown_88;
+element_type(16#95) -> cisco_unknown_95;
+element_type(16#96) -> cisco_unknown_96;
+element_type(16#dd) -> vendor_specific_ie;
+element_type(16#ad) -> symbol_proprietrary;
 
-element_to_atom(ssid)-> 16#00;
-element_to_atom(rates)-> 16#01;
-element_to_atom(fh)-> 16#02;
-element_to_atom(ds)-> 16#03;
-element_to_atom(cf)-> 16#04;
-element_to_atom(tim)-> 16#05;
-element_to_atom(ibss)-> 16#06;
-element_to_atom(country)-> 16#07;
-element_to_atom(fh_hop_param)-> 16#08;
-element_to_atom(fh_hop_table)-> 16#09;
-element_to_atom(request)-> 16#0a;
-element_to_atom(qbss_load)-> 16#0b;
-element_to_atom(edca_param)-> 16#0c;
-element_to_atom(tspec)-> 16#0d;
-element_to_atom(tclas)-> 16#0e;
-element_to_atom(schedule)-> 16#0f;
-element_to_atom(challenge)-> 16#10;
-element_to_atom(power_constraint)-> 16#20;
-element_to_atom(power_capability)-> 16#21;
-element_to_atom(tpc_request)-> 16#22;
-element_to_atom(tpc_report)-> 16#23;
-element_to_atom(supported_channels)-> 16#24;
-element_to_atom(channel_switch_ann)-> 16#25;
-element_to_atom(measure_req)-> 16#26;
-element_to_atom(measure_rep)-> 16#27;
-element_to_atom(quiet)-> 16#28;
-element_to_atom(ibss_dfs)-> 16#29;
-element_to_atom(erp_info)-> 16#2a;
-element_to_atom(ts_delay)-> 16#2b;
-element_to_atom(tclass_process)-> 16#2c;
-element_to_atom(ht_capability)-> 16#2d;
-element_to_atom(qos_capability)-> 16#2e;
-element_to_atom(erp_info_old)-> 16#2f;
-element_to_atom(rsn_ie)-> 16#30;
-element_to_atom(reserved)-> 16#31;
-element_to_atom(ext_supp_rates)-> 16#32;
-element_to_atom(neighor_report)-> 16#34;
-element_to_atom(ht_info)-> 16#3d;
-element_to_atom(secondary_channel_offset)-> 16#3e;
-element_to_atom(wsie)-> 16#45;
-element_to_atom(bss_co_ex_20_40)-> 16#48;
-element_to_atom(bss_intol_ch_rep_20_40)-> 16#49;
-element_to_atom(extended_capabilities)-> 16#7f;
-element_to_atom(agere_proprietrary)-> 16#80;
-element_to_atom(cisco_ccx1_ckip)-> 16#85;
-element_to_atom(cisco_unknown_88)-> 16#88;
-element_to_atom(cisco_unknown_95)-> 16#95;
-element_to_atom(cisco_unknown_96)-> 16#96;
-element_to_atom(vendor_specific_ie)-> 16#dd;
-element_to_atom(symbol_proprietrary)-> 16#ad;
+element_type(ssid)-> 16#00;
+element_type(rates)-> 16#01;
+element_type(fh)-> 16#02;
+element_type(ds)-> 16#03;
+element_type(cf)-> 16#04;
+element_type(tim)-> 16#05;
+element_type(ibss)-> 16#06;
+element_type(country)-> 16#07;
+element_type(fh_hop_param)-> 16#08;
+element_type(fh_hop_table)-> 16#09;
+element_type(request)-> 16#0a;
+element_type(qbss_load)-> 16#0b;
+element_type(edca_param)-> 16#0c;
+element_type(tspec)-> 16#0d;
+element_type(tclas)-> 16#0e;
+element_type(schedule)-> 16#0f;
+element_type(challenge)-> 16#10;
+element_type(power_constraint)-> 16#20;
+element_type(power_capability)-> 16#21;
+element_type(tpc_request)-> 16#22;
+element_type(tpc_report)-> 16#23;
+element_type(supported_channels)-> 16#24;
+element_type(channel_switch_ann)-> 16#25;
+element_type(measure_req)-> 16#26;
+element_type(measure_rep)-> 16#27;
+element_type(quiet)-> 16#28;
+element_type(ibss_dfs)-> 16#29;
+element_type(erp_info)-> 16#2a;
+element_type(ts_delay)-> 16#2b;
+element_type(tclass_process)-> 16#2c;
+element_type(ht_capability)-> 16#2d;
+element_type(qos_capability)-> 16#2e;
+element_type(erp_info_old)-> 16#2f;
+element_type(rsn_ie)-> 16#30;
+element_type(reserved)-> 16#31;
+element_type(ext_supp_rates)-> 16#32;
+element_type(neighor_report)-> 16#34;
+element_type(ht_info)-> 16#3d;
+element_type(secondary_channel_offset)-> 16#3e;
+element_type(wsie)-> 16#45;
+element_type(bss_co_ex_20_40)-> 16#48;
+element_type(bss_intol_ch_rep_20_40)-> 16#49;
+element_type(extended_capabilities)-> 16#7f;
+element_type(agere_proprietrary)-> 16#80;
+element_type(cisco_ccx1_ckip)-> 16#85;
+element_type(cisco_unknown_88)-> 16#88;
+element_type(cisco_unknown_95)-> 16#95;
+element_type(cisco_unknown_96)-> 16#96;
+element_type(vendor_specific_ie)-> 16#dd;
+element_type(symbol_proprietrary)-> 16#ad;
 
-element_to_atom(N) -> {unsupported, N}.
+element_type(N) -> {unsupported, N}.
+
+
+% Managment frame bodies can be passed as proplists
+% or as preconstructed binaries
+elements_to_bin(N) when is_binary(N) ->
+    N;
+elements_to_bin(N) when is_list(N) ->
+    management_body(N).
 
 
 management_body(Body) ->
@@ -680,19 +721,32 @@ management_body(Body) ->
 
 management_body(<<>>, Acc) ->
     lists:reverse(Acc);
+management_body([], Acc) ->
+    list_to_binary(lists:reverse(Acc));
 
 management_body(<<?E_FH, _Len, Dwell:?UINT16LE, HopSet, HopPattern,
     HopIndex, Rest/binary>>, Acc) ->
     management_body(Rest, [{fh, Dwell, HopSet, HopPattern, HopIndex}|Acc]);
+management_body([{fh, Dwell, HopSet, HopPattern, HopIndex}|T], Acc) ->
+    management_body(T, [<<?E_FH, 5, Dwell:?UINT16LE, HopSet, HopPattern, HopIndex>>|Acc]);
 
 management_body(<<?E_CF, _Len, Count, Period, MaxDuration:?UINT16LE,
     DurationRemaining:?UINT16LE, Rest/binary>>, Acc) ->
     management_body(Rest, [{cf, Count, Period, MaxDuration, DurationRemaining}|Acc]);
+management_body([{cf, Count, Period, MaxDuration, DurationRemaining}|T], Acc) ->
+    management_body(T, [<<?E_CF, 6, Count, Period, MaxDuration:?UINT16LE, DurationRemaining:?UINT16LE>>|Acc]);
 
 management_body(<<?E_TIM, Len, Count, Period, BitmapControl, Rest/binary>>, Acc) ->
     Size = Len-3,
     <<Bitmap:Size/bytes, Rest1/binary>> = Rest,
     management_body(Rest1, [{tim, Count, Period, BitmapControl, Bitmap}|Acc]);
+management_body([{tim, Count, Period, BitmapControl, Bitmap}|T], Acc) ->
+    Len = byte_size(Bitmap)+3,
+    management_body(T, [<<?E_TIM, Len, Count, Period, BitmapControl, Bitmap/binary>>|Acc]);
 
 management_body(<<Type, Len, Element:Len/bytes, Rest/binary>>, Acc) ->
-    management_body(Rest, [{element_to_atom(Type), Element}|Acc]).
+    management_body(Rest, [{element_type(Type), Element}|Acc]);
+management_body([{Type, Element}|T], Acc) ->
+    N = element_type(Type),
+    Len = byte_size(N),
+    management_body(T, [<<N, Len, Element/binary>>|Acc]).
