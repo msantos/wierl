@@ -78,34 +78,29 @@
 -record(ieee802_11_cf_rts, {
         duration = 0,
         ra = <<0,0,0,0,0,0>>,
-        ta = <<0,0,0,0,0,0>>,
-        body = []
+        ta = <<0,0,0,0,0,0>>
     }).
 
 -record(ieee802_11_cf_cts, {
         duration = 0,
-        ra = <<0,0,0,0,0,0>>,
-        body = []
+        ra = <<0,0,0,0,0,0>>
     }).
 
 -record(ieee802_11_cf_ack, {
         duration = 0,
-        ra = <<0,0,0,0,0,0>>,
-        body = []
+        ra = <<0,0,0,0,0,0>>
     }).
 
 -record(ieee802_11_cf_ps, {
         aid = 0,
         bssid = <<0,0,0,0,0,0>>,
-        ta = <<0,0,0,0,0,0>>,
-        body = []
+        ta = <<0,0,0,0,0,0>>
     }).
 
 -record(ieee802_11_cf_cfend, {
         duration = 0,
         ra = <<0,0,0,0,0,0>>,
-        bssid = <<0,0,0,0,0,0>>,
-        body = []
+        bssid = <<0,0,0,0,0,0>>
     }).
 
 -record(ieee802_11_cf_bar, {
@@ -113,16 +108,14 @@
         ra = <<0,0,0,0,0,0>>,
         ta = <<0,0,0,0,0,0>>,
         bar = 0,
-        seq_ctl = 0,
-        body = []
+        seq_ctl = 0
     }).
 
 -record(ieee802_11_cf_ba, {
         duration = 0,
         ba = 0,
         seq_ctl = 0,
-        bitmap = <<>>,
-        body = []
+        bitmap = <<>>
     }).
 
 -record(ieee802_11_data, {
