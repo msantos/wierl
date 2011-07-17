@@ -34,7 +34,8 @@
 %%
 -module(wierl_monitor).
 -export([
-        open/1, close/1,
+        open/1,
+        close/1, close/2, close/3,
         frame/1
     ]).
 
@@ -59,6 +60,16 @@ open(Ifname) when byte_size(Ifname) < ?IFNAMSIZ ->
     {ok, Socket, Ifindex}.
 
 close(Socket) when is_integer(Socket) ->
+    procket:close(Socket).
+
+close(Ifname, Socket) ->
+    close(Ifname, Socket, infra).
+
+close(Ifname, Socket, Mode) when is_integer(Socket), is_atom(Mode) ->
+    wierl_config:down(Ifname),
+    wierl_config:param(Ifname, {mode, Mode}),
+    wierl_config:up(Ifname),
+
     procket:close(Socket).
 
 
