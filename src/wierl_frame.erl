@@ -713,7 +713,10 @@ element_type(N) -> {unsupported, N}.
 elements_to_bin(N) when is_binary(N) ->
     N;
 elements_to_bin(N) when is_list(N) ->
-    management_body(N).
+    % Remove unhandled types (weak check, element_type returns a
+    % tuple ({unsupported, Key} on failure)
+    Elements = [ {K,V} || {K,V} <- N, is_integer(element_type(K)) ],
+    management_body(Elements).
 
 
 management_body(Body) ->
