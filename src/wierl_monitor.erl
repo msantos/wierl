@@ -34,10 +34,12 @@
 %%
 -module(wierl_monitor).
 -export([
-        open/1, close/1
+        open/1, close/1,
+        frame/1
     ]).
 
 -include("wierl.hrl").
+-include("wierl_frame.hrl").
 
 -define(ETH_P_ALL, 16#0003).
 -define(PF_PACKET, 17).
@@ -58,3 +60,17 @@ open(Ifname) when byte_size(Ifname) < ?IFNAMSIZ ->
 
 close(Socket) when is_integer(Socket) ->
     procket:close(Socket).
+
+
+% Decode a complete frame
+frame(Frame) when is_binary(Frame) ->
+    % Get the radiotap header
+    {Radiotap, Data1} = wierl_radiotap:header(Frame),
+
+    % Frame control header
+    {FC, Data2} = wierl_frame:frame_control(Data1),
+
+    % Frame control body
+    FB = wierl_frame:frame_type(FC, Data2),
+
+    {Radiotap, FC, FB}.
