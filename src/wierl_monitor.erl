@@ -84,6 +84,23 @@ write(Socket, Frame) ->
     procket:write(Socket, Frame).
 
 
+% Encode a complete frame
+frame({#ieee802_11_radiotap{} = Radio,
+        #ieee802_11_fc{} = FC,
+        FB}) when is_tuple(FB) ->
+    list_to_binary([
+            wierl_radiotap:header(Radio),
+            wierl_frame:frame_control(FC),
+            wierl_frame:frame_type(FC, FB)
+        ]);
+
+frame({#ieee802_11_fc{} = FC,
+        FB}) when is_tuple(FB) ->
+    list_to_binary([
+            wierl_frame:frame_control(FC),
+            wierl_frame:frame_type(FC, FB)
+        ]);
+
 % Decode a complete frame
 frame(Frame) when is_binary(Frame) ->
     % Get the radiotap header
