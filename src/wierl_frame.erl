@@ -751,5 +751,5 @@ management_body(<<Type, Len, Element:Len/bytes, Rest/binary>>, Acc) ->
     management_body(Rest, [{element_type(Type), Element}|Acc]);
 management_body([{Type, Element}|T], Acc) ->
     N = element_type(Type),
-    Len = byte_size(N),
+    Len = byte_size(Element),
     management_body(T, [<<N, Len, Element/binary>>|Acc]).
