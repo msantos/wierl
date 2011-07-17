@@ -36,7 +36,10 @@
 -export([
         open/1,
         close/1, close/2, close/3,
-        frame/1
+        frame/1,
+
+        read/1, read/2,
+        write/2
     ]).
 
 -include("wierl.hrl").
@@ -71,6 +74,14 @@ close(Ifname, Socket, Mode) when is_integer(Socket), is_atom(Mode) ->
     wierl_config:up(Ifname),
 
     procket:close(Socket).
+
+read(Socket) ->
+    read(Socket, 16#FFFF).
+read(Socket, Size) ->
+    procket:read(Socket, Size).
+
+write(Socket, Frame) ->
+    procket:write(Socket, Frame).
 
 
 % Decode a complete frame
