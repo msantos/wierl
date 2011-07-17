@@ -63,8 +63,7 @@
         power_management = 0,
         more_data = 0,
         protected = 0,
-        order = 0,
-        body = []
+        order = 0
     }).
 
 -record(ieee802_11_management, {
