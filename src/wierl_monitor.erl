@@ -44,9 +44,12 @@
 
 
 open(Ifname) when byte_size(Ifname) < ?IFNAMSIZ ->
-    wierl_config:down(Ifname),
-    wierl_config:param(Ifname, {mode, wierl:mode(monitor)}),
-    wierl_config:up(Ifname),
+    ok = wierl_config:down(Ifname),
+
+    Mode = wierl:mode(monitor),
+    <<Mode, 0:(15*8)>> = wierl_config:param(Ifname, {mode, Mode}),
+
+    ok = wierl_config:up(Ifname),
 
     {ok, Socket} = packet:socket(?ETH_P_ALL),
     Ifindex = packet:ifindex(Socket, binary_to_list(Ifname)),
