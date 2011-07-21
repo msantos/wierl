@@ -60,7 +60,7 @@ open(Ifname) when byte_size(Ifname) < ?IFNAMSIZ ->
     {ok, Socket} = packet:socket(?ETH_P_ALL),
     Ifindex = packet:ifindex(Socket, binary_to_list(Ifname)),
     ok = packet:bind(Socket, Ifindex),
-    {ok, Socket, Ifindex}.
+    {ok, Socket}.
 
 close(Socket) when is_integer(Socket) ->
     procket:close(Socket).
