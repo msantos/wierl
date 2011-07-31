@@ -53,7 +53,7 @@ open(Ifname) when byte_size(Ifname) < ?IFNAMSIZ ->
     ok = wierl_config:down(Ifname),
 
     Mode = wierl:mode(monitor),
-    <<Mode, 0:(15*8)>> = wierl_config:param(Ifname, {mode, Mode}),
+    {ok, <<Mode, 0:(15*8)>>} = wierl_config:param(Ifname, {mode, Mode}),
 
     ok = wierl_config:up(Ifname),
 

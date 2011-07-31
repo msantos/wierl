@@ -57,7 +57,7 @@ param(Dev) when is_binary(Dev) ->
     {ok, Socket} = open(),
 
     Attr = case ioctl(Socket, Dev, ?SIOCGIWNAME) of
-        <<>> ->
+        {ok, <<>>} ->
             {error, enotsup};
         Name ->
             [{name, Name}] ++
@@ -119,10 +119,10 @@ ioctl(Socket, Dev, Req, Buf) ->
 
     case procket:ioctl(Socket, Req, Struct) of
         {ok, <<Dev:Len/bytes, 0:Bits, 0, Value/binary>>} ->
-            Value;
+            {ok, Value};
         % XXX Ignore unsupported parameters
         {error, enotsup} ->
-            <<>>;
+            {ok, <<>>};
         {error, _} = Error ->
             Error
     end.
@@ -154,7 +154,7 @@ ioctl_point(Socket, Dev, Req, Alloc, Flags) ->
     case procket:ioctl(Socket, Req, Struct) of
         {ok, <<Dev:Len/bytes, 0:Bits, 0, _Ptr:Pointer, ValLen:?UINT16, _Flag:?UINT16>>} ->
             {ok, <<Val:ValLen/bytes, _/binary>>} = procket:buf(Res),
-            Val;
+            {ok, Val};
         {error, _} = Error ->
             Error
     end.
