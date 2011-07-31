@@ -1,9 +1,11 @@
+# Erlang interface for manipulating 802.11 wireless network devices
 
-# Erlang interface for manipulating 802.11 wireless interfaces
+wierl is a set of Erlang modules for interacting with 802.11 wireless
+devices on Linux.
 
 ## NOTE ON PRIVILEGES
-
-To run this code, Erlang will have to either run as root or have
+ 
+To run this code, Erlang will either have to run as root or have
 CAP\_NET\_ADMIN privileges:
 
     setcap cap_net_admin=ep /path/to/beam
@@ -38,14 +40,14 @@ CAP\_NET\_ADMIN privileges:
                 BSSID = binary()
                 ScanInfo = [Info]
                 Info = {Key, binary()}
-                Key = [ custom
+                Key = custom
                     | encode
                     | essid
                     | freq
                     | genie
                     | mode
                     | qual
-                    | rate ]
+                    | rate
                 Options = [{essid, binary()}]
 
     Initiate a wireless scan and return the scan list.
@@ -66,7 +68,7 @@ CAP\_NET\_ADMIN privileges:
         Types   Ifname = binary()
                 Socket = int()
                 Attr = {Key,Value} | Key
-                Key = [ name
+                Key = name
                     | nwid
                     | freq
                     | mode
@@ -75,10 +77,10 @@ CAP\_NET\_ADMIN privileges:
                     | range
                     | ap
                     | rate
-                    | power ]
+                    | power
                 Value = binary() | integer()
                 Parameters = [Parameter]
-                Parameter = [ {name, binary()}
+                Parameter = {name, binary()}
                     | {nwid, binary()}
                     | {freq, binary()}
                     | {mode, binary()}
@@ -87,7 +89,7 @@ CAP\_NET\_ADMIN privileges:
                     | {range, binary()}
                     | {ap, binary()}
                     | {rate, binary()}
-                    | {power, binary()} ]
+                    | {power, binary()}
 
     Query or set a wireless parameter.
 
@@ -152,6 +154,65 @@ CAP\_NET\_ADMIN privileges:
 
 ### wierl
 
+### wierl_monitor
+
+    wierl_monitor:open(Interface) ->  {ok, FD} | {error, posix()}
+
+        Types   Interface = binary()
+                FD = integer()
+		
+    Place a wireless network interface into monitor mode, returning a
+    file descriptor that can be used for reading 802.11 frames.
+
+    wierl_monitor:close(FD) ->  ok | {error, posix()}
+    wierl_monitor:close(Interface, FD) ->  ok
+
+        Types   FD = integer()
+                Interface = binary()
+
+    Close the file descriptor associated with the wireless device. close/1
+    leaves the device in monitor mode. close/2 restores the device to
+    infrastructure (managed) mode.
+
+    wierl_monitor:read(FD) -> {ok, Frame} | {error, posix()}
+    wierl_monitor:read(FD, Size) -> {ok, Frame} | {error, posix()}
+
+        Types   FD = integer()
+                Size = integer()
+                Frame = binary()
+
+    Attempt to read a frame from the wireless device.
+
+    wierl_monitor:write(FD, Frame) -> ok | {error, posix()}
+
+        Types   FD = integer()
+                Frame = binary()
+
+    Attempt to write a frame to the wireless device.
+
+    wierl_monitor:frame(Frame) -> {Radiotap, FrameControl, FrameBody}
+    wierl_monitor:frame({FrameControl, FrameBody}) -> Frame
+
+        Types   Frame = binary()
+                Radiotap = #ieee802_11_radiotap{}
+                FrameControl = #ieee802_11_fc{}
+                FrameBody = #ieee802_11_management{}
+                    | #ieee802_11_cf_rts{},
+                    | #ieee802_11_cf_cts{},
+                    | #ieee802_11_cf_ack{},
+                    | #ieee802_11_cf_ps{},
+                    | #ieee802_11_cf_cfend{},
+                    | #ieee802_11_cf_bar{},
+                    | #ieee802_11_cf_ba{},
+                    | #ieee802_11_data{}
+
+    Encode or decode an 802.11 wireless frame between binaries and
+    records. Include the wierl_frame header to have access to the
+    record structures:
+
+    -include("include/wierl_frame.hrl")
+
+
 ### rfkill
 
 rfkill is a wireless soft kill switch.
@@ -176,12 +237,10 @@ rfkill is a wireless soft kill switch.
 
         wierl:decode({freq, wierl_config:param(<<"wlan0">>, freq)}).
 
-* decode monitor mode frames
-
-* generate monitor mode frames
-
 * get stats from /proc/net/wireless
 
 * cleanup: redundant constants between wierl/procket
 
 * move frame decoding/encoding to pkt
+
+* test sending frames
