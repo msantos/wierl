@@ -40,6 +40,7 @@
 -include("wierl.hrl").
 -include("wierl_frame.hrl").
 
+-define(BMAP(X,Y), X bor (1 bsl Y)).
 
 %%-------------------------------------------------------------------------
 %%% Radiotap header
@@ -54,6 +55,32 @@ header(<<Version:8, Pad:8, Len:?UINT16LE,
 
     Size = Len-8,
     <<Header:Size/bytes, Data/binary>> = Frame,
+
+    {Extensions, Unknown} = extension(Present, Header),
+
+    {#ieee802_11_radiotap{
+        version = Version,
+        pad = Pad,
+        len = Len,
+        present = Extensions,
+        unknown = Unknown
+    }, Data};
+header(#ieee802_11_radiotap{
+        version = Version,
+        pad = Pad,
+        len = Len,
+        present = Extensions,
+        unknown = Unknown
+    }) ->
+
+    {Bitmap, Header} = extension(Extensions),
+
+    <<Version:8, Pad:8, Len:?UINT16LE,
+    Bitmap:?UINT32LE,
+    Header/bytes, Unknown/binary>>.
+
+
+extension(Bitmap, Extensions) when is_integer(Bitmap), is_binary(Extensions) ->
 
     <<Ext:1,
     Vendor_namespace:1,
@@ -78,9 +105,9 @@ header(<<Version:8, Pad:8, Len:?UINT16LE,
     Channel:1,
     Rate:1,
     Flags:1,
-    Tsft:1>> = <<Present:32>>,
+    Tsft:1>> = <<Bitmap:32>>,
 
-    Bitmap = [ K || {K,V} <-
+    Present = [ K || {K,V} <-
         [
             {tsft, Tsft},
             {flags, Flags},
@@ -103,24 +130,47 @@ header(<<Version:8, Pad:8, Len:?UINT16LE,
             {ext, Ext}
         ], V == 1 ],
 
-    {Extensions, Unknown} = extension(Bitmap, Header),
-
-    {#ieee802_11_radiotap{
-        version = Version,
-        pad = Pad,
-        len = Len,
-        present = Extensions,
-        unknown = Unknown
-    }, Data}.
-
-extension(Bitmap, Extensions) when is_list(Bitmap), is_binary(Extensions) ->
     {Header, Unknown} = lists:foldl(
-        fun (Type, {Present, Data}) ->
+        fun (Type, {Field, Data}) ->
                 {Decoded, Rest} = field(Type, Data),
-                {[Decoded|Present], Rest}
+                {[Decoded|Field], Rest}
         end,
-        {[], Extensions}, Bitmap),
+        {[], Extensions}, Present),
+
     {lists:reverse(Header), Unknown}.
+
+extension(Extensions) when is_list(Extensions) ->
+
+    Bitmap = lists:foldl(
+        fun (tsft, N) -> ?BMAP(N,0);
+            (flags, N) -> ?BMAP(N,1);
+            (rate, N) -> ?BMAP(N,2);
+            (channel, N) -> ?BMAP(N,3);
+            (fhss, N) -> ?BMAP(N,4);
+            (dbm_antsignal, N) -> ?BMAP(N,5);
+            (dbm_antnoise, N) -> ?BMAP(N,6);
+            (lock_quality, N) -> ?BMAP(N,7);
+            (tx_attenuation, N) -> ?BMAP(N,8);
+            (db_tx_attenuation, N) -> ?BMAP(N,9);
+            (dbm_tx_power, N) -> ?BMAP(N,10);
+            (antenna, N) -> ?BMAP(N,11);
+            (db_antsignal, N) -> ?BMAP(N,12);
+            (db_antnoise, N) -> ?BMAP(N,13);
+            (rx_flags, N) -> ?BMAP(N,14);
+            (xchannel, N) -> ?BMAP(N,18);
+            (mcs, N) -> ?BMAP(N,19);
+            (vendor_namepsace, N) -> ?BMAP(N,30);
+            (ext, N) -> ?BMAP(N,31)
+        end,
+        0, proplists:get_keys(Extensions)),
+
+    Present = lists:foldl(
+        fun (Field, Fields) ->
+                [field(Field)|Fields]
+        end,
+        [], lists:reverse(Extensions)),
+
+    {Bitmap, list_to_binary(Present)}.
 
 
 %% See:
@@ -181,6 +231,61 @@ field(mcs, <<Known:8, Flags:8, Mcs:8, Data/binary>>) ->
 field(vendor_namespace, <<OUI1:8, OUI2:8, OUI3:8, Subspace:8, Len:?UINT16, Data/binary>>) ->
     {{vendor_namespace, {OUI1, OUI2, OUI3}, Subspace, Len}, Data}.
 
+field({tsft, Microsec}) ->
+    <<Microsec:?UINT64>>;
+
+field({channel, Channel, Flags}) ->
+    <<Channel:?UINT16, Flags:?UINT16>>;
+
+field({fhss, Hop, Pattern}) ->
+    <<Hop:8, Pattern:8>>;
+
+field({mcs_index, Index}) ->
+    <<1, Index:8>>;
+field({rate, Rate}) ->
+    <<Rate:8>>;
+
+field({dbm_antsignal, Signal}) ->
+    <<Signal:8>>;
+
+field({dbm_antnoise, Noise}) ->
+    <<Noise:8>>;
+
+field({db_antsignal, Signal}) ->
+    <<Signal:8>>;
+
+field({db_antnoise, Noise}) ->
+    <<Noise:8>>;
+
+field({lock_quality, Qual}) ->
+    <<Qual:8>>;
+
+field({tx_attenuation, Power}) ->
+    <<Power:?UINT16>>;
+
+field({db_tx_attenuation, Power}) ->
+    <<Power:?UINT16>>;
+
+field({dbm_tx_power, Power}) ->
+    <<Power:8>>;
+
+field({flags, Bitmap}) ->
+    <<Bitmap:8>>;
+
+field({antenna, Index}) ->
+    <<Index:8>>;
+
+field({rx_flags, Bitmap}) ->
+    <<Bitmap:8>>;
+
+field({xchannel, Bitmap, Mhz, Channel, Max_power}) ->
+    <<Bitmap:?UINT32, Mhz:?UINT16, Channel:8, Max_power:8>>;
+
+field({mcs, Known, Flags, Mcs}) ->
+    <<Known:8, Flags:8, Mcs:8>>;
+
+field({vendor_namespace, {OUI1, OUI2, OUI3}, Subspace, Len}) ->
+    <<OUI1:8, OUI2:8, OUI3:8, Subspace:8, Len:?UINT16>>.
 
 %%-------------------------------------------------------------------------
 %%% Internal functions
