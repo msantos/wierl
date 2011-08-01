@@ -316,7 +316,7 @@ frame_type(#ieee802_11_fc{type = 0, subtype = 11},
 % Reserved: 0110-0111, 1110-1111
 frame_type(#ieee802_11_fc{type = 0, subtype = Subtype},
     <<Duration:?UINT16LE, DA:6/bytes, SA:6/bytes, BSSID:6/bytes,
-    SeqCtl:?UINT16LE, Body/binary>>) when Subtype band 6 /= 6 ->
+    SeqCtl:?UINT16LE, Body/binary>>) when Subtype band 2#0110 /= 2#0110 ->
     #ieee802_11_management{
             duration = Duration,
             da = DA,
