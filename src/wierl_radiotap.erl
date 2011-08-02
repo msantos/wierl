@@ -56,28 +56,28 @@ header(<<Version:8, Pad:8, Len:?UINT16LE,
     Size = Len-8,
     <<Header:Size/bytes, Data/binary>> = Frame,
 
-    {Extensions, Unknown} = extension(Present, Header),
+    {Extensions, Rest} = extension(Present, Header),
 
     {#ieee802_11_radiotap{
         version = Version,
         pad = Pad,
         len = Len,
         present = Extensions,
-        unknown = Unknown
+        rest = Rest
     }, Data};
 header(#ieee802_11_radiotap{
         version = Version,
         pad = Pad,
         len = Len,
         present = Extensions,
-        unknown = Unknown
+        rest = Rest
     }) ->
 
     {Bitmap, Header} = extension(Extensions),
 
     <<Version:8, Pad:8, Len:?UINT16LE,
     Bitmap:?UINT32LE,
-    Header/bytes, Unknown/binary>>.
+    Header/bytes, Rest/binary>>.
 
 
 extension(Bitmap, Extensions) when is_integer(Bitmap), is_binary(Extensions) ->
@@ -130,14 +130,14 @@ extension(Bitmap, Extensions) when is_integer(Bitmap), is_binary(Extensions) ->
             {ext, Ext}
         ], V == 1 ],
 
-    {Header, Unknown} = lists:foldl(
+    {Header, Rest} = lists:foldl(
         fun (Type, {Field, Data}) ->
                 {Decoded, Rest} = field(Type, Data),
                 {[Decoded|Field], Rest}
         end,
         {[], Extensions}, Present),
 
-    {lists:reverse(Header), Unknown}.
+    {lists:reverse(Header), Rest}.
 
 extension(Extensions) when is_list(Extensions) ->
 
