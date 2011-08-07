@@ -51,10 +51,7 @@
 
 open(Ifname) when byte_size(Ifname) < ?IFNAMSIZ ->
     ok = wierl_config:down(Ifname),
-
-    Mode = wierl:mode(monitor),
-    {ok, <<Mode, 0:(15*8)>>} = wierl_config:param(Ifname, {mode, Mode}),
-
+    ok = monitor(Ifname),
     ok = wierl_config:up(Ifname),
 
     {ok, Socket} = packet:socket(?ETH_P_ALL),
@@ -113,3 +110,25 @@ frame(Frame) when is_binary(Frame) ->
     FB = wierl_frame:frame_type(FC, Data2),
 
     {Radiotap, FC, FB}.
+
+
+%%-------------------------------------------------------------------------
+%%% Internal functions
+%%-------------------------------------------------------------------------
+
+% Most drivers require the device to be down before
+% changing the mode. Other wireless devices need to be
+% up before changing the mode.
+%
+% XXX Possible to end up in an infinite loop here?
+monitor(Ifname) ->
+    Mode = wierl:mode(monitor),
+    case wierl_config:param(Ifname, {mode, Mode}) of
+        {ok, <<Mode, 0:(15*8)>>} ->
+            ok;
+        {error, enetdown} ->
+            ok = wierl_config:up(Ifname),
+            monitor(Ifname);
+        Error ->
+            Error
+    end.
