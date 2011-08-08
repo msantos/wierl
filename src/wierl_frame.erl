@@ -34,7 +34,7 @@
 %%
 -module(wierl_frame).
 -export([
-        frame_control/1, frame_type/2,
+        control/1, type/2,
         field/2
     ]).
 
@@ -52,7 +52,7 @@
 %% 2 bytes, little endian
 %%
 %% Match frame control in big-endian format
-frame_control(<<
+control(<<
     Subtype:4, Type:2, Version:2,
 
     Order:1, Protected:1, MoreData:1, PwrMgmt:1,
@@ -72,7 +72,7 @@ frame_control(<<
         protected = Protected,
         order = Order
     }, Data};
-frame_control(#ieee802_11_fc{
+control(#ieee802_11_fc{
         version = Version,
         type = Type,
         subtype = Subtype,
@@ -99,7 +99,7 @@ frame_control(#ieee802_11_fc{
 %%
 
 % Association request
-frame_type(#ieee802_11_fc{type = 0, subtype = 0},
+type(#ieee802_11_fc{type = 0, subtype = 0},
     <<Duration:?UINT16LE,
     DA:6/bytes, SA:6/bytes, BSSID:6/bytes,
     SeqCtl:?UINT16LE,
@@ -121,7 +121,7 @@ frame_type(#ieee802_11_fc{type = 0, subtype = 0},
 
 % Association response
 % Re-association response
-frame_type(#ieee802_11_fc{type = 0, subtype = Subtype},
+type(#ieee802_11_fc{type = 0, subtype = Subtype},
     <<Duration:?UINT16LE,
     DA:6/bytes, SA:6/bytes, BSSID:6/bytes,
     SeqCtl:?UINT16LE,
@@ -143,7 +143,7 @@ frame_type(#ieee802_11_fc{type = 0, subtype = Subtype},
     };
 
 % Re-association request
-frame_type(#ieee802_11_fc{type = 0, subtype = 2},
+type(#ieee802_11_fc{type = 0, subtype = 2},
     <<Duration:?UINT16LE,
     DA:6/bytes, SA:6/bytes, BSSID:6/bytes,
     SeqCtl:?UINT16LE,
@@ -165,7 +165,7 @@ frame_type(#ieee802_11_fc{type = 0, subtype = 2},
     };
 
 % Probe request
-frame_type(#ieee802_11_fc{type = 0, subtype = 4},
+type(#ieee802_11_fc{type = 0, subtype = 4},
     <<Duration:?UINT16LE,
     DA:6/bytes, SA:6/bytes, BSSID:6/bytes,
     SeqCtl:?UINT16LE,
@@ -182,7 +182,7 @@ frame_type(#ieee802_11_fc{type = 0, subtype = 4},
     };
 
 % Probe response
-frame_type(#ieee802_11_fc{type = 0, subtype = 5},
+type(#ieee802_11_fc{type = 0, subtype = 5},
     <<Duration:?UINT16LE,
     DA:6/bytes, SA:6/bytes, BSSID:6/bytes,
     SeqCtl:?UINT16LE,
@@ -204,7 +204,7 @@ frame_type(#ieee802_11_fc{type = 0, subtype = 5},
     };
 
 % Beacon
-frame_type(#ieee802_11_fc{type = 0, subtype = 8},
+type(#ieee802_11_fc{type = 0, subtype = 8},
     <<Duration:?UINT16LE,
     DA:6/bytes, SA:6/bytes, BSSID:6/bytes,
     SeqCtl:?UINT16LE,
@@ -226,7 +226,7 @@ frame_type(#ieee802_11_fc{type = 0, subtype = 8},
     };
 
 % IBSS ATIM
-frame_type(#ieee802_11_fc{type = 0, subtype = 9},
+type(#ieee802_11_fc{type = 0, subtype = 9},
     <<Duration:?UINT16LE,
     DA:6/bytes, SA:6/bytes, BSSID:6/bytes,
     SeqCtl:?UINT16LE>>) ->
@@ -239,7 +239,7 @@ frame_type(#ieee802_11_fc{type = 0, subtype = 9},
     };
 
 % Disassociation
-frame_type(#ieee802_11_fc{type = 0, subtype = 10},
+type(#ieee802_11_fc{type = 0, subtype = 10},
     <<Duration:?UINT16LE,
     DA:6/bytes, SA:6/bytes, BSSID:6/bytes,
     SeqCtl:?UINT16LE,
@@ -257,7 +257,7 @@ frame_type(#ieee802_11_fc{type = 0, subtype = 10},
     };
 
 % Authentication
-frame_type(#ieee802_11_fc{type = 0, subtype = 11},
+type(#ieee802_11_fc{type = 0, subtype = 11},
     <<Duration:?UINT16LE,
     DA:6/bytes, SA:6/bytes, BSSID:6/bytes,
     SeqCtl:?UINT16LE,
@@ -279,7 +279,7 @@ frame_type(#ieee802_11_fc{type = 0, subtype = 11},
     };
 
 % Deauthentication
-frame_type(#ieee802_11_fc{type = 0, subtype = 12},
+type(#ieee802_11_fc{type = 0, subtype = 12},
     <<Duration:?UINT16LE,
     DA:6/bytes, SA:6/bytes, BSSID:6/bytes,
     SeqCtl:?UINT16LE,
@@ -296,7 +296,7 @@ frame_type(#ieee802_11_fc{type = 0, subtype = 12},
     };
 
 % Action
-frame_type(#ieee802_11_fc{type = 0, subtype = 11},
+type(#ieee802_11_fc{type = 0, subtype = 11},
     <<Duration:?UINT16LE,
     DA:6/bytes, SA:6/bytes, BSSID:6/bytes,
     SeqCtl:?UINT16LE,
@@ -314,7 +314,7 @@ frame_type(#ieee802_11_fc{type = 0, subtype = 11},
 
 % Unhandled, valid management frames
 % Reserved: 0110-0111, 1110-1111
-frame_type(#ieee802_11_fc{type = 0, subtype = Subtype},
+type(#ieee802_11_fc{type = 0, subtype = Subtype},
     <<Duration:?UINT16LE, DA:6/bytes, SA:6/bytes, BSSID:6/bytes,
     SeqCtl:?UINT16LE, Body/binary>>) when Subtype band 2#0110 /= 2#0110 ->
     #ieee802_11_management{
@@ -326,7 +326,7 @@ frame_type(#ieee802_11_fc{type = 0, subtype = Subtype},
 
             body = Body
     };
-frame_type(#ieee802_11_fc{type = 0},
+type(#ieee802_11_fc{type = 0},
     #ieee802_11_management{
             duration = Duration,
             da = DA,
@@ -346,7 +346,7 @@ frame_type(#ieee802_11_fc{type = 0},
 %%
 
 % Request to send (RTS)
-frame_type(#ieee802_11_fc{type = 1,
+type(#ieee802_11_fc{type = 1,
         subtype = 16#B},
     <<Duration:?UINT16LE,
     RA:6/bytes, TA:6/bytes>>) ->
@@ -355,7 +355,7 @@ frame_type(#ieee802_11_fc{type = 1,
             ra = RA,
             ta = TA
     };
-frame_type(#ieee802_11_fc{type = 1,
+type(#ieee802_11_fc{type = 1,
         subtype = 16#B},
     #ieee802_11_cf_rts{
             duration = Duration,
@@ -366,14 +366,14 @@ frame_type(#ieee802_11_fc{type = 1,
     RA:6/bytes, TA:6/bytes>>;
 
 % Clear to send (CTS)
-frame_type(#ieee802_11_fc{type = 1,
+type(#ieee802_11_fc{type = 1,
         subtype = 16#C},
     <<Duration:?UINT16LE, RA:6/bytes>>) ->
     #ieee802_11_cf_cts{
             duration = Duration,
             ra = RA
     };
-frame_type(#ieee802_11_fc{type = 1,
+type(#ieee802_11_fc{type = 1,
         subtype = 16#C},
     #ieee802_11_cf_cts{
             duration = Duration,
@@ -382,14 +382,14 @@ frame_type(#ieee802_11_fc{type = 1,
     <<Duration:?UINT16LE, RA:6/bytes>>;
 
 % Acknowledgement (ACK)
-frame_type(#ieee802_11_fc{type = 1,
+type(#ieee802_11_fc{type = 1,
         subtype = 16#D},
     <<Duration:?UINT16LE, RA:6/bytes>>) ->
     #ieee802_11_cf_ack{
             duration = Duration,
             ra = RA
     };
-frame_type(#ieee802_11_fc{type = 1,
+type(#ieee802_11_fc{type = 1,
         subtype = 16#D},
     #ieee802_11_cf_ack{
             duration = Duration,
@@ -398,7 +398,7 @@ frame_type(#ieee802_11_fc{type = 1,
     <<Duration:?UINT16LE, RA:6/bytes>>;
 
 % Power save poll (PS)
-frame_type(#ieee802_11_fc{type = 1,
+type(#ieee802_11_fc{type = 1,
         subtype = 16#A},
     <<AID:?UINT16LE, BSSID:6/bytes, TA:6/bytes>>) ->
     #ieee802_11_cf_ps{
@@ -406,7 +406,7 @@ frame_type(#ieee802_11_fc{type = 1,
             bssid = BSSID,
             ta = TA
     };
-frame_type(#ieee802_11_fc{type = 1,
+type(#ieee802_11_fc{type = 1,
         subtype = 16#A},
     #ieee802_11_cf_ps{
             aid = AID,
@@ -416,7 +416,7 @@ frame_type(#ieee802_11_fc{type = 1,
     <<AID:?UINT16LE, BSSID:6/bytes, TA:6/bytes>>;
 
 % Contention free end; CF end + CF ACK
-frame_type(#ieee802_11_fc{type = 1,
+type(#ieee802_11_fc{type = 1,
         subtype = Subtype},
     <<Duration:?UINT16LE, RA:6/bytes, BSSID:6/bytes>>)
     when Subtype == 16#E; Subtype == 16#F ->
@@ -425,7 +425,7 @@ frame_type(#ieee802_11_fc{type = 1,
             ra = RA,
             bssid = BSSID
     };
-frame_type(#ieee802_11_fc{type = 1,
+type(#ieee802_11_fc{type = 1,
         subtype = Subtype},
     #ieee802_11_cf_cfend{
             duration = Duration,
@@ -436,7 +436,7 @@ frame_type(#ieee802_11_fc{type = 1,
     <<Duration:?UINT16LE, RA:6/bytes, BSSID:6/bytes>>;
 
 % Block Ack Request (BlockAckReq)
-frame_type(#ieee802_11_fc{type = 1,
+type(#ieee802_11_fc{type = 1,
         subtype = 8},
     <<Duration:?UINT16LE, RA:6/bytes, TA:6/bytes,
     BAR:?UINT16LE, SeqCtl:?UINT16LE>>) ->
@@ -447,7 +447,7 @@ frame_type(#ieee802_11_fc{type = 1,
             bar = {BAR band 16#0fff, BAR bsr 12},
             seq_ctl = field(seq_ctl, SeqCtl)
     };
-frame_type(#ieee802_11_fc{type = 1,
+type(#ieee802_11_fc{type = 1,
         subtype = 8},
     #ieee802_11_cf_bar{
             duration = Duration,
@@ -460,7 +460,7 @@ frame_type(#ieee802_11_fc{type = 1,
     TID:4, Reserved:12, SeqNum:12, FragNum:4>>;
 
 % Block Ack (BlockAck)
-frame_type(#ieee802_11_fc{type = 1,
+type(#ieee802_11_fc{type = 1,
         subtype = 9},
     <<Duration:?UINT16LE, BA:?UINT16LE, SeqCtl:?UINT16LE,
     Bitmap:128/bytes>>) ->
@@ -470,7 +470,7 @@ frame_type(#ieee802_11_fc{type = 1,
             seq_ctl = field(seq_ctl, SeqCtl),
             bitmap = Bitmap
     };
-frame_type(#ieee802_11_fc{type = 1,
+type(#ieee802_11_fc{type = 1,
         subtype = 8},
     #ieee802_11_cf_ba{
             duration = Duration,
@@ -484,7 +484,7 @@ frame_type(#ieee802_11_fc{type = 1,
 %%
 %% Data
 %%
-frame_type(#ieee802_11_fc{type = 2,
+type(#ieee802_11_fc{type = 2,
     to_ds = 0, from_ds = 0},
     <<Duration:?UINT16LE, DA:6/bytes, SA:6/bytes, BSSID:6/bytes, Body/binary>>) ->
     #ieee802_11_data{
@@ -495,7 +495,7 @@ frame_type(#ieee802_11_fc{type = 2,
 
             body = Body
     };
-frame_type(#ieee802_11_fc{type = 2,
+type(#ieee802_11_fc{type = 2,
     to_ds = 0, from_ds = 0},
     #ieee802_11_data{
             duration = Duration,
@@ -508,7 +508,7 @@ frame_type(#ieee802_11_fc{type = 2,
     <<Duration:?UINT16LE, DA:6/bytes, SA:6/bytes, BSSID:6/bytes,
     (elements_to_bin(Body))/binary>>;
 
-frame_type(#ieee802_11_fc{type = 2,
+type(#ieee802_11_fc{type = 2,
     to_ds = 0, from_ds = 1},
     <<Duration:?UINT16LE, DA:6/bytes, BSSID:6/bytes, SA:6/bytes, Body/binary>>) ->
     #ieee802_11_data{
@@ -519,7 +519,7 @@ frame_type(#ieee802_11_fc{type = 2,
 
             body = Body
     };
-frame_type(#ieee802_11_fc{type = 2,
+type(#ieee802_11_fc{type = 2,
     to_ds = 0, from_ds = 1},
     #ieee802_11_data{
             duration = Duration,
@@ -532,7 +532,7 @@ frame_type(#ieee802_11_fc{type = 2,
     <<Duration:?UINT16LE, DA:6/bytes, BSSID:6/bytes, SA:6/bytes,
     (elements_to_bin(Body))/binary>>;
 
-frame_type(#ieee802_11_fc{type = 2,
+type(#ieee802_11_fc{type = 2,
     to_ds = 1, from_ds = 0},
     <<Duration:?UINT16LE, BSSID:6/bytes, SA:6/bytes, DA:6/bytes, Body/binary>>) ->
     #ieee802_11_data{
@@ -543,7 +543,7 @@ frame_type(#ieee802_11_fc{type = 2,
 
             body = Body
     };
-frame_type(#ieee802_11_fc{type = 2,
+type(#ieee802_11_fc{type = 2,
     to_ds = 1, from_ds = 0},
     #ieee802_11_data{
             duration = Duration,
@@ -556,7 +556,7 @@ frame_type(#ieee802_11_fc{type = 2,
     <<Duration:?UINT16LE, BSSID:6/bytes, SA:6/bytes, DA:6/bytes,
     (elements_to_bin(Body))/binary>>;
 
-frame_type(#ieee802_11_fc{type = 2,
+type(#ieee802_11_fc{type = 2,
     to_ds = 1, from_ds = 1},
     <<Duration:?UINT16LE, RA:6/bytes, TA:6/bytes, DA:6/bytes,
     SA:6/bytes, Body/binary>>) ->
@@ -569,7 +569,7 @@ frame_type(#ieee802_11_fc{type = 2,
 
             body = Body
     };
-frame_type(#ieee802_11_fc{type = 2,
+type(#ieee802_11_fc{type = 2,
     to_ds = 1, from_ds = 1},
     #ieee802_11_data{
             duration = Duration,
@@ -586,7 +586,7 @@ frame_type(#ieee802_11_fc{type = 2,
 %%
 %% Reserved
 %%
-frame_type(#ieee802_11_fc{}, _Body) ->
+type(#ieee802_11_fc{}, _Body) ->
     reserved.
 
 

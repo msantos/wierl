@@ -87,15 +87,15 @@ frame({#ieee802_11_radiotap{} = Radio,
         FB}) when is_tuple(FB) ->
     list_to_binary([
             wierl_radiotap:header(Radio),
-            wierl_frame:frame_control(FC),
-            wierl_frame:frame_type(FC, FB)
+            wierl_frame:control(FC),
+            wierl_frame:type(FC, FB)
         ]);
 
 frame({#ieee802_11_fc{} = FC,
         FB}) when is_tuple(FB) ->
     list_to_binary([
-            wierl_frame:frame_control(FC),
-            wierl_frame:frame_type(FC, FB)
+            wierl_frame:control(FC),
+            wierl_frame:type(FC, FB)
         ]);
 
 % Decode a complete frame
@@ -104,10 +104,10 @@ frame(Frame) when is_binary(Frame) ->
     {Radiotap, Data1} = wierl_radiotap:header(Frame),
 
     % Frame control header
-    {FC, Data2} = wierl_frame:frame_control(Data1),
+    {FC, Data2} = wierl_frame:control(Data1),
 
     % Frame control body
-    FB = wierl_frame:frame_type(FC, Data2),
+    FB = wierl_frame:type(FC, Data2),
 
     {Radiotap, FC, FB}.
 
