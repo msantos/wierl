@@ -53,14 +53,10 @@ header(<<Version:8, Pad:8, Len:?UINT16LE,
     Present:?UINT32LE,
     Frame/binary>>) ->
 
-    io:format("see this1~n"),
     Size = Len-8,
-    io:format("see this2:size=~p~n", [Size]),
     <<Header:Size/bytes, Data/binary>> = Frame,
-    io:format("see this3~n"),
 
     {Extensions, Rest} = extension(Present, Header),
-    io:format("see this4~n"),
 
     {#ieee802_11_radiotap{
         version = Version,
