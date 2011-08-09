@@ -44,14 +44,6 @@
 -define(E_CHALLENGE, 16).
 
 
--record(ieee802_11_radiotap, {
-        version = 0,
-        pad = 0,
-        len = 0,
-        present = [],
-        rest = <<>>
-    }).
-
 -record(ieee802_11_fc, {
         version = ?IEEE802_11_PROTOCOL_VERSION,
         type = <<>>,
@@ -126,4 +118,45 @@
         ta = <<0,0,0,0,0,0>>,
         bssid = <<0,0,0,0,0,0>>,
         body = []
+    }).
+
+
+%%-------------------------------------------------------------------------
+%%% Radiotap header
+%%-------------------------------------------------------------------------
+-record(ieee802_11_radiotap, {
+        version = 0,
+        pad = 0,
+        len = 0,
+        present = [],
+        rest = <<>>
+    }).
+
+
+%%-------------------------------------------------------------------------
+%%% PRISM header
+%%-------------------------------------------------------------------------
+-define(PRISM_MSGCODE, 16#0041).
+
+-record(prism_value, {
+        did = 0,
+        status = 0,
+        len = 0,
+        data = 0
+    }).
+
+-record(ieee802_11_prism, {
+        msgcode = ?PRISM_MSGCODE,
+        msglen = 144,
+        devname = <<0:(16*8)>>,
+        hosttime = #prism_value{},
+        mactime = #prism_value{},
+        channel = #prism_value{},
+        rssi = #prism_value{},
+        sq = #prism_value{},
+        signal = #prism_value{},
+        noise = #prism_value{},
+        rate = #prism_value{},
+        istx = #prism_value{},
+        frmlen = #prism_value{}
     }).
