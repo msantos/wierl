@@ -156,44 +156,44 @@ CAP\_NET\_ADMIN privileges:
 
 ### wierl_monitor
 
-    wierl_monitor:open(Interface) ->  {ok, FD} | {error, posix()}
+    wierl_monitor:open(Interface) ->  {ok, Socket} | {error, posix()}
 
         Types   Interface = binary()
-                FD = integer()
+                Socket = pid()
 		
     Place a wireless network interface into monitor mode, returning a
-    file descriptor that can be used for reading 802.11 frames.
+    file descriptor (the pid of a gen_server holding the fd) that can
+    be used for reading 802.11 frames.
 
-    wierl_monitor:close(FD) ->  ok | {error, posix()}
-    wierl_monitor:close(Interface, FD) ->  ok
+    wierl_monitor:close(Socket) ->  ok | {error, posix()}
 
-        Types   FD = integer()
+        Types   Socket = pid()
                 Interface = binary()
 
     Close the file descriptor associated with the wireless device. close/1
-    leaves the device in monitor mode. close/2 restores the device to
-    infrastructure (managed) mode.
+    leaves the device in monitor mode.
 
-    wierl_monitor:read(FD) -> {ok, Frame} | {error, posix()}
-    wierl_monitor:read(FD, Size) -> {ok, Frame} | {error, posix()}
+    wierl_monitor:read(Socket) -> {ok, Frame} | {error, posix()}
+    wierl_monitor:read(Socket, Size) -> {ok, Frame} | {error, posix()}
 
-        Types   FD = integer()
+        Types   Socket = pid()
                 Size = integer()
                 Frame = binary()
 
     Attempt to read a frame from the wireless device.
 
-    wierl_monitor:write(FD, Frame) -> ok | {error, posix()}
+    wierl_monitor:write(Socket, Frame) -> ok | {error, posix()}
 
-        Types   FD = integer()
+        Types   Socket = pid()
                 Frame = binary()
 
     Attempt to write a frame to the wireless device.
 
-    wierl_monitor:frame(Frame) -> {Radiotap, FrameControl, FrameBody}
-    wierl_monitor:frame({FrameControl, FrameBody}) -> Frame
+    wierl_monitor:frame(Socket, Frame) -> {Radiotap, FrameControl, FrameBody}
+    wierl_monitor:frame(Socket, {FrameControl, FrameBody}) -> Frame
 
-        Types   Frame = binary()
+        Types   Socket = pid()
+                Frame = binary()
                 Radiotap = #ieee802_11_radiotap{}
                 FrameControl = #ieee802_11_fc{}
                 FrameBody = #ieee802_11_management{}
