@@ -22,6 +22,12 @@ CAP\_NET\_ADMIN privileges:
     % Scan using the "wlan0" interface 
     wierl_scan:list(<<"wlan0">>).
 
+    # Monitor mode: make sure the network manager is stopped. For example,
+    # on Ubuntu: service network-manager stop
+    {ok, Socket} = wierl_monitor:open(<<"wlan0">>),
+    {ok, Frame} = wierl_monitor:read(Socket),
+    wierl_monitor:frame(Socket, Frame).
+
     # If you want to remove the privs
     sudo setcap -r /path/to/beam
 
@@ -239,8 +245,9 @@ rfkill is a wireless soft kill switch.
 
 * get stats from /proc/net/wireless
 
-* cleanup: redundant constants between wierl/procket
+* wierl_monitor
+    * sending frames
+    * cleanup: redundant constants between wierl/procket
+    * frame/1: allow the caller to specify the header type
 
-* move frame decoding/encoding to pkt
-
-* test sending frames
+* support Mac OS X
