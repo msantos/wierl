@@ -36,16 +36,16 @@
 -behaviour(gen_server).
 
 -export([
-        open/1,
+        open/1, open/2,
         close/1,
         frame/2,
 
         read/1, read/2,
         write/2,
 
-        mode/2
+        mode/2, controlling_process/2
     ]).
--export([start_link/1]).
+-export([start_link/2]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
         terminate/2, code_change/3]).
 
@@ -57,11 +57,12 @@
 -define(SIZEOF_STRUCT_SOCKADDR_LL, 20).
 
 -record(state, {
+        port,
         pid,
         socket,
         ifname,
         ifindex,
-        header        % header format
+        header        % radio header format
     }).
 
 
@@ -69,7 +70,15 @@
 %%% Exports
 %%--------------------------------------------------------------------
 open(Ifname) ->
-    start_link(Ifname).
+    open(Ifname, []).
+open(Ifname, Flags) ->
+    case start_link(Ifname, Flags) of
+        {ok, Ref} ->
+            datalinktype(Ref),
+            {ok, Ref};
+        Error ->
+            Error
+    end.
 
 close(Ref) ->
     gen_server:call(Ref, close).
@@ -116,15 +125,22 @@ mode(Ref, Mode) when is_atom(Mode) ->
     wireless_mode(Ifname, Mode).
 
 
-start_link(Ifname) when byte_size(Ifname) < ?IFNAMSIZ ->
+% FIXME: race condition: events can be delivered out of order
+controlling_process(Ref, Pid) when is_pid(Ref), is_pid(Pid) ->
+    flush_events(Ref, Pid),
+    gen_server:call(Ref, {controlling_process, Pid}),
+    flush_events(Ref, Pid).
+
+
+start_link(Ifname, Flags) when byte_size(Ifname) < ?IFNAMSIZ, is_list(Flags) ->
     Pid = self(),
-    gen_server:start_link(?MODULE, [Pid, Ifname], []).
+    gen_server:start_link(?MODULE, [Pid, Ifname, Flags], []).
 
 
 %%--------------------------------------------------------------------
 %%% Callbacks
 %%--------------------------------------------------------------------
-init([Pid, Ifname]) ->
+init([Pid, Ifname, Flags]) ->
     process_flag(trap_exit, true),
 
     ok = wierl_config:down(Ifname),
@@ -135,7 +151,15 @@ init([Pid, Ifname]) ->
     Ifindex = packet:ifindex(Socket, binary_to_list(Ifname)),
     ok = packet:bind(Socket, Ifindex),
 
+    Active = proplists:get_value(active, Flags, false),
+
+    Port = case Active of
+        true -> set_active(Socket);
+        false -> false
+    end,
+
     {ok, #state{
+            port = Port,
             pid = Pid,
             ifname = Ifname,
             socket = Socket,
@@ -147,6 +171,8 @@ handle_call(header, _From, #state{header = Header} = State) ->
     {reply, Header, State};
 handle_call(ifname, _From, #state{ifname = Ifname} = State) ->
     {reply, Ifname, State};
+handle_call({controlling_process, Pid}, {Owner,_}, #state{pid = Owner} = State) ->
+    {reply, ok, State#state{pid = Pid}};
 
 handle_call({read, Size}, _From, #state{socket = Socket} = State) ->
     case procket:recvfrom(Socket, Size, 0, ?SIZEOF_STRUCT_SOCKADDR_LL) of
@@ -171,6 +197,12 @@ handle_call(close, _From, State) ->
 
 handle_cast(_Msg, State) ->
     {noreply, State}.
+
+
+%% {active, true} mode
+handle_info({Port, {data, Data}}, #state{port = Port, pid = Pid} = State) ->
+    Pid ! {wierl_monitor, self(), Data},
+    {noreply, State};
 
 % WTF?
 handle_info(Info, State) ->
@@ -212,3 +244,30 @@ dlt(N) when is_integer(N) -> {unsupported, N};
 
 dlt(wierl_prism) -> 802;
 dlt(wierl_radiotap) -> 803.
+
+% Get the datalink type of the interface by reading 0 bytes
+% from the socket. The interface may not be ready, so spin
+% here until it comes up.
+%
+% XXX May end up looping forever here.
+datalinktype(Socket) ->
+    case read(Socket, 0) of
+        {error,eagain} ->
+            timer:sleep(10),
+            datalinktype(Socket);
+        {ok, <<>>} ->
+            ok
+    end.
+
+%% active mode
+set_active(FD) ->
+    open_port({fd, FD, FD}, [stream, binary]).
+
+flush_events(Ref, Pid) ->
+    receive
+        {wierl_monitor, Ref, _} = Event ->
+            Pid ! Event,
+            flush_events(Ref, Pid)
+    after
+        0 -> ok
+    end.
