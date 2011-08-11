@@ -249,12 +249,19 @@ dlt(wierl_radiotap) -> 803.
 % from the socket. The interface may not be ready, so spin
 % here until it comes up.
 %
-% XXX May end up looping forever here.
+% In some cases the interface will never come up. tcpdump
+% doesn't display any frames being received by the interface.
+% Only fix so far is to reboot.
 datalinktype(Socket) ->
+    datalinktype(Socket, 200).
+
+datalinktype(_Socket, 0) ->
+    throw({error,enetdown});
+datalinktype(Socket, N) ->
     case read(Socket, 0) of
         {error,eagain} ->
             timer:sleep(10),
-            datalinktype(Socket);
+            datalinktype(Socket, N-1);
         {ok, <<>>} ->
             ok
     end.
