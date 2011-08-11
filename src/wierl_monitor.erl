@@ -74,9 +74,17 @@ open(Ifname) ->
 open(Ifname, Flags) ->
     case start_link(Ifname, Flags) of
         {ok, Ref} ->
-            datalinktype(Ref),
+            open_1(Ref);
+        Error ->
+            Error
+    end.
+
+open_1(Ref) ->
+    case datalinktype(Ref) of
+        ok ->
             {ok, Ref};
         Error ->
+            close(Ref),
             Error
     end.
 
@@ -256,7 +264,7 @@ datalinktype(Socket) ->
     datalinktype(Socket, 200).
 
 datalinktype(_Socket, 0) ->
-    throw({error,enetdown});
+    {error,enetdown};
 datalinktype(Socket, N) ->
     case read(Socket, 0) of
         {error,eagain} ->
