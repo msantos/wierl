@@ -752,4 +752,8 @@ management_body(<<Type, Len, Element:Len/bytes, Rest/binary>>, Acc) ->
 management_body([{Type, Element}|T], Acc) ->
     N = element_type(Type),
     Len = byte_size(Element),
-    management_body(T, [<<N, Len, Element/binary>>|Acc]).
+    management_body(T, [<<N, Len, Element/binary>>|Acc]);
+
+%% XXX Some drivers include 4 trailing bytes (FCS?)
+management_body(<<_FCS:4/bytes>>, Acc) ->
+    management_body(<<>>, Acc).
