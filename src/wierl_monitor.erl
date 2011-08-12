@@ -62,7 +62,7 @@
         socket,
         ifname,
         ifindex,
-        header        % radio header format
+        dlt         % radio header format
     }).
 
 
@@ -72,21 +72,7 @@
 open(Ifname) ->
     open(Ifname, []).
 open(Ifname, Flags) ->
-    case start_link(Ifname, Flags) of
-        {ok, Ref} ->
-            open_1(Ref);
-        Error ->
-            Error
-    end.
-
-open_1(Ref) ->
-    case datalinktype(Ref) of
-        ok ->
-            {ok, Ref};
-        Error ->
-            close(Ref),
-            Error
-    end.
+    start_link(Ifname, Flags).
 
 close(Ref) ->
     gen_server:call(Ref, close).
@@ -115,7 +101,7 @@ frame(_Ref, {Header, #ieee802_11_fc{} = FC, FB}) when is_tuple(FB) ->
 
 % Decode a complete frame
 frame(Ref, Frame) when is_binary(Frame) ->
-    Type = gen_server:call(Ref, header),
+    Type = gen_server:call(Ref, dlt),
 
     % Get the radio header
     {Radio, Data1} = Type:header(Frame),
@@ -142,7 +128,7 @@ controlling_process(Ref, Pid) when is_pid(Ref), is_pid(Pid) ->
 
 start_link(Ifname, Flags) when byte_size(Ifname) < ?IFNAMSIZ, is_list(Flags) ->
     Pid = self(),
-    gen_server:start_link(?MODULE, [Pid, Ifname, Flags], []).
+    gen_server:start_link(?MODULE, [Pid, Ifname, Flags], [{timeout, 5000}]).
 
 
 %%--------------------------------------------------------------------
@@ -159,23 +145,30 @@ init([Pid, Ifname, Flags]) ->
     Ifindex = packet:ifindex(Socket, binary_to_list(Ifname)),
     ok = packet:bind(Socket, Ifindex),
 
-    Active = proplists:get_value(active, Flags, false),
+    case datalinktype(Socket) of
+        {ok, DLT} ->
+            Active = proplists:get_value(active, Flags, false),
 
-    Port = case Active of
-        true -> set_active(Socket);
-        false -> false
-    end,
+            Port = case Active of
+                true -> set_active(Socket);
+                false -> false
+            end,
 
-    {ok, #state{
-            port = Port,
-            pid = Pid,
-            ifname = Ifname,
-            socket = Socket,
-            ifindex = Ifindex
-    }}.
+            {ok, #state{
+                dlt = DLT,
+                port = Port,
+                pid = Pid,
+                ifname = Ifname,
+                socket = Socket,
+                ifindex = Ifindex
+            }};
+        {error, Error} ->
+            procket:close(Socket),
+            {stop, Error}
+    end.
 
 
-handle_call(header, _From, #state{header = Header} = State) ->
+handle_call(dlt, _From, #state{dlt = Header} = State) ->
     {reply, Header, State};
 handle_call(ifname, _From, #state{ifname = Ifname} = State) ->
     {reply, Ifname, State};
@@ -191,7 +184,7 @@ handle_call({read, Size}, _From, #state{socket = Socket} = State) ->
             Hatype:?UINT16,
             _/binary
             >>} ->
-            {reply, {ok, Buf}, State#state{header = dlt(Hatype)}};
+            {reply, {ok, Buf}, State#state{dlt = dlt(Hatype)}};
         {error, _} = Error ->
             {reply, Error, State};
         Unknown ->
@@ -261,17 +254,20 @@ dlt(wierl_radiotap) -> 803.
 % doesn't display any frames being received by the interface.
 % Only fix so far is to reboot.
 datalinktype(Socket) ->
-    datalinktype(Socket, 200).
-
-datalinktype(_Socket, 0) ->
-    {error,enetdown};
-datalinktype(Socket, N) ->
-    case read(Socket, 0) of
+    case procket:recvfrom(Socket, 0, 0, ?SIZEOF_STRUCT_SOCKADDR_LL) of
         {error,eagain} ->
             timer:sleep(10),
-            datalinktype(Socket, N-1);
-        {ok, <<>>} ->
-            ok
+            datalinktype(Socket);
+        {ok, <<>>, <<
+            _Family:?UINT16,
+            _Protocol:?UINT16,
+            _Ifindex:?UINT32,
+            Hatype:?UINT16,
+            _/binary
+            >>} ->
+            {ok, dlt(Hatype)};
+        {error, _} = Error ->
+            Error
     end.
 
 %% active mode
