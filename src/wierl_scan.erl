@@ -174,7 +174,7 @@ event(<<EventLen:?UINT16, Cmd:?UINT16, Buf/binary>>, #state{ap = AP, aps = APs})
                 });
         Type ->
             Info = gb_trees:get(AP, APs),
-            Info1 = orddict:append(Type, Event, Info),
+            Info1 = orddict:store(Type, Event, Info),
             event(Rest, #state{
                     ap = AP,
                     aps = gb_trees:enter(AP, Info1, APs)
