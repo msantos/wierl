@@ -110,11 +110,9 @@ decode({Key, Val}) when is_binary(Val) ->
 
 % What is 1?
 % kludge for padding on 64-bit
-decode_1({essid, <<Len:?UINT16, 1:?UINT16, 0,0,0,0, Bin/binary>>}) ->
-    <<ESSID:Len/bytes, _/binary>> = Bin,
+decode_1({essid, <<Len:?UINT16, 1:?UINT16, 0,0,0,0, ESSID:Len/bytes, _/binary>>}) ->
     ESSID;
-decode_1({essid, <<Len:?UINT16, 1:?UINT16, Bin/binary>>}) ->
-    <<ESSID:Len/bytes, _/binary>> = Bin,
+decode_1({essid, <<Len:?UINT16, 1:?UINT16, ESSID:Len/bytes, _/binary>>}) ->
     ESSID;
 
 decode_1({bssid, <<1,0, Bytes:6/bytes, 0,0,0,0,0,0,0,0, _/binary>>}) ->
