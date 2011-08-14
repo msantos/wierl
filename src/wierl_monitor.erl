@@ -223,10 +223,8 @@ code_change(_OldVsn, State, _Extra) ->
 %%--------------------------------------------------------------------
 
 % Most drivers require the device to be down before
-% changing the mode. Other wireless devices need to be
-% up before changing the mode.
-%
-% XXX Possible to end up in an infinite loop here?
+% changing the mode. Legacy drivers like rt2870sta
+% need the interface to be up before changing the mode.
 wireless_mode(Ifname, Mode) ->
     N = wierl:mode(Mode),
     case wierl_config:param(Ifname, {mode, N}) of
@@ -252,7 +250,8 @@ dlt(wierl_radiotap) -> 803.
 %
 % In some cases the interface will never come up. tcpdump
 % doesn't display any frames being received by the interface.
-% Only fix so far is to reboot.
+% Only fix is to unload/load the driver kernel module or
+% (more reliable) reboot.
 datalinktype(Socket) ->
     case procket:recvfrom(Socket, 0, 0, ?SIZEOF_STRUCT_SOCKADDR_LL) of
         {error,eagain} ->
