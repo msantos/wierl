@@ -110,7 +110,8 @@ frame(Ref, Frame) when is_binary(Frame) ->
     {FC, Data2} = wierl_frame:control(Data1),
 
     % Frame control body
-    FB = wierl_frame:type(FC, Data2),
+    % XXX check the FCS is correct
+    {FB, _FCS} = wierl_frame:type(FC, Data2),
 
     {Radio, FC, FB}.
 
