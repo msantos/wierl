@@ -172,6 +172,8 @@ init([Pid, Ifname, Flags]) ->
     Ifindex = packet:ifindex(Socket, binary_to_list(Ifname)),
     ok = packet:bind(Socket, Ifindex),
 
+    FCS = proplists:get_value(fcs, Flags, false),
+
     case datalinktype(Socket) of
         {ok, DLT} ->
             Active = proplists:get_value(active, Flags, false),
@@ -187,7 +189,8 @@ init([Pid, Ifname, Flags]) ->
                 pid = Pid,
                 ifname = Ifname,
                 socket = Socket,
-                ifindex = Ifindex
+                ifindex = Ifindex,
+                fcs = FCS
             }};
         {error, Error} ->
             procket:close(Socket),
