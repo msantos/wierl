@@ -62,7 +62,8 @@
         socket,
         ifname,
         ifindex,
-        dlt         % radio header format
+        dlt,            % radio header format
+        fcs = false     % FCS is present in frame
     }).
 
 
@@ -111,9 +112,34 @@ frame(Ref, Frame) when is_binary(Frame) ->
 
     % Frame control body
     % XXX check the FCS is correct
-    {FB, _FCS} = wierl_frame:type(FC, Data2),
+    {FB, FCS} = wierl_frame:type(FC, Data2),
 
-    {Radio, FC, FB}.
+    {FB1, FCS1} = case FCS of
+        <<>> ->
+            % Driver does not provide FCS or frame type
+            % does not use FCS
+            {FB, 0};
+        <<N:4/unsigned-integer-unit:8>> ->
+            % Driver provides FCS
+            % XXX flag is set in state  on EVERY frame
+            ok = gen_server:call(Ref, {fcs, true}),
+            {FB, N};
+        false ->
+            % Ambiguous frame type, check our state if
+            % FCS is provided
+            Include = gen_server:call(Ref, fcs),
+
+            case Include of
+                true ->
+                    Len = byte_size(FB) - 4,
+                    <<F1:Len/bytes, F2:4/unsigned-integer-unit:8>> = FB,
+                    {F1, F2};
+                false ->
+                    {FB, 0}
+            end
+    end,
+
+    {Radio, FC, FB1, FCS1}.
 
 mode(Ref, Mode) when is_atom(Mode) ->
     Ifname = gen_server:call(Ref, ifname),
@@ -169,8 +195,12 @@ init([Pid, Ifname, Flags]) ->
     end.
 
 
-handle_call(dlt, _From, #state{dlt = Header} = State) ->
-    {reply, Header, State};
+handle_call(dlt, _From, #state{dlt = DLT} = State) ->
+    {reply, DLT, State};
+handle_call(fcs, _From, #state{fcs = FCS} = State) ->
+    {reply, FCS, State};
+handle_call({fcs, FCS}, _From, State) ->
+    {reply, ok, State#state{fcs = FCS}};
 handle_call(ifname, _From, #state{ifname = Ifname} = State) ->
     {reply, Ifname, State};
 handle_call({controlling_process, Pid}, {Owner,_}, #state{pid = Owner} = State) ->
