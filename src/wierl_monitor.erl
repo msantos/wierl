@@ -121,7 +121,7 @@ frame(Ref, Frame) when is_binary(Frame) ->
             {FB, 0};
         <<N:4/unsigned-integer-unit:8>> ->
             % Driver provides FCS
-            % XXX flag is set in state  on EVERY frame
+            % XXX flag is set in state on EVERY frame
             ok = gen_server:call(Ref, {fcs, true}),
             {FB, N};
         false ->
@@ -131,9 +131,11 @@ frame(Ref, Frame) when is_binary(Frame) ->
 
             case Include of
                 true ->
-                    Len = byte_size(FB) - 4,
-                    <<F1:Len/bytes, F2:4/unsigned-integer-unit:8>> = FB,
-                    {F1, F2};
+                    % Remove 4 bytes from the frame body and re-parse the frame
+                    Len = byte_size(Data2) - 4,
+                    <<Body:Len/bytes, RealFCS:4/unsigned-integer-unit:8>> = Data2,
+                    {FrameBody, _} = wierl_frame:type(FC, Body),
+                    {FrameBody, RealFCS};
                 false ->
                     {FB, 0}
             end
