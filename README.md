@@ -195,8 +195,8 @@ CAP\_NET\_ADMIN privileges:
 
     Attempt to write a frame to the wireless device.
 
-    wierl_monitor:frame(Socket, Frame) ->
-        {Radiotap, FrameControl, FrameBody, FrameCheckSequence}
+    wierl_monitor:frame(Socket, Frame) -> {Radiotap, FrameControl,
+        FrameBody, FrameCheckSequence} | {error, bad_frame}
     wierl_monitor:frame(Socket, {FrameControl, FrameBody}) -> Frame
 
         Types   Socket = pid()

@@ -87,61 +87,23 @@ write(Ref, Frame) ->
     gen_server:call(Ref, {write, Frame}).
 
 % Encode a complete frame
-frame(_Ref, {Header, #ieee802_11_fc{} = FC, FB}) when is_tuple(FB) ->
-
-    Type = case element(1, Header) of
-        ieee802_11_radiotap -> wierl_radiotap;
-        ieee802_11_prism -> wierl_prism
-    end,
-
-    list_to_binary([
-            Type:header(Header),
-            wierl_frame:control(FC),
-            wierl_frame:type(FC, FB)
-        ]);
-
+frame(Ref, {Header, #ieee802_11_fc{} = FC, FB}) when is_tuple(FB) ->
+    try frame_encode(Ref, {Header, FC, FB}) of
+        N ->
+            N
+    catch
+        error:_ ->
+            {error, bad_frame}
+    end;
 % Decode a complete frame
 frame(Ref, Frame) when is_binary(Frame) ->
-    Type = gen_server:call(Ref, dlt),
-
-    % Get the radio header
-    {Radio, Data1} = Type:header(Frame),
-
-    % Frame control header
-    {FC, Data2} = wierl_frame:control(Data1),
-
-    % Frame control body
-    % XXX check the FCS is correct
-    {FB, FCS} = wierl_frame:type(FC, Data2),
-
-    {FB1, FCS1} = case FCS of
-        <<>> ->
-            % Driver does not provide FCS or frame type
-            % does not use FCS
-            {FB, 0};
-        <<N:4/unsigned-integer-unit:8>> ->
-            % Driver provides FCS
-            % XXX flag is set in state on EVERY frame
-            ok = gen_server:call(Ref, {fcs, true}),
-            {FB, N};
-        false ->
-            % Ambiguous frame type, check our state if
-            % FCS is provided
-            Include = gen_server:call(Ref, fcs),
-
-            case Include of
-                true ->
-                    % Remove 4 bytes from the frame body and re-parse the frame
-                    Len = byte_size(Data2) - 4,
-                    <<Body:Len/bytes, RealFCS:4/unsigned-integer-unit:8>> = Data2,
-                    {FrameBody, _} = wierl_frame:type(FC, Body),
-                    {FrameBody, RealFCS};
-                false ->
-                    {FB, 0}
-            end
-    end,
-
-    {Radio, FC, FB1, FCS1}.
+    try frame_decode(Ref, Frame) of
+        N ->
+            N
+    catch
+        error:_ ->
+            {error, bad_frame}
+    end.
 
 mode(Ref, Mode) when is_atom(Mode) ->
     Ifname = gen_server:call(Ref, ifname),
@@ -304,6 +266,62 @@ datalinktype(Socket) ->
         {error, _} = Error ->
             Error
     end.
+
+
+frame_encode(_Ref, {Header, FC, FB}) ->
+    Type = case element(1, Header) of
+        ieee802_11_radiotap -> wierl_radiotap;
+        ieee802_11_prism -> wierl_prism
+    end,
+
+    list_to_binary([
+            Type:header(Header),
+            wierl_frame:control(FC),
+            wierl_frame:type(FC, FB)
+        ]).
+
+frame_decode(Ref, Frame) ->
+    Type = gen_server:call(Ref, dlt),
+
+    % Get the radio header
+    {Radio, Data1} = Type:header(Frame),
+
+    % Frame control header
+    {FC, Data2} = wierl_frame:control(Data1),
+
+    % Frame control body
+    % XXX check the FCS is correct
+    {FB, FCS} = wierl_frame:type(FC, Data2),
+
+    {FB1, FCS1} = case FCS of
+        <<>> ->
+            % Driver does not provide FCS or frame type
+            % does not use FCS
+            {FB, 0};
+        <<N:4/unsigned-integer-unit:8>> ->
+            % Driver provides FCS
+            % XXX flag is set in state on EVERY frame
+            ok = gen_server:call(Ref, {fcs, true}),
+            {FB, N};
+        false ->
+            % Ambiguous frame type, check our state if
+            % FCS is provided
+            Include = gen_server:call(Ref, fcs),
+
+            case Include of
+                true ->
+                    % Remove 4 bytes from the frame body and re-parse the frame
+                    Len = byte_size(Data2) - 4,
+                    <<Body:Len/bytes, RealFCS:4/unsigned-integer-unit:8>> = Data2,
+                    {FrameBody, _} = wierl_frame:type(FC, Body),
+                    {FrameBody, RealFCS};
+                false ->
+                    {FB, 0}
+            end
+    end,
+
+    {Radio, FC, FB1, FCS1}.
+
 
 %% active mode
 set_active(FD) ->
