@@ -74,11 +74,9 @@
     }).
 
 block() ->
-    Event = block(on),
-    write(Event).
+    write(block(on)).
 unblock() ->
-    Event = block(off),
-    write(Event).
+    write(block(off)).
 
 block(on) -> block(?BLOCK);
 block(off) -> block(?UNBLOCK);
@@ -133,8 +131,11 @@ list_1(FD) ->
                 {soft, Soft},
                 {hard, Hard}
             ]};
-        _ ->
-            list_1(FD)
+        {error, eagain} ->
+            timer:sleep(10),
+            list_1(FD);
+        Error ->
+            Error
     end.
 
 
