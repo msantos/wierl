@@ -34,7 +34,7 @@
         decode/1,
         cmd/1,
         mode/1,
-        pad/1, pad/2
+        wordalign/1, wordalign/2
     ]).
 
 -include("wierl.hrl").
@@ -98,55 +98,44 @@ param(Param) ->
 decode({Key, List}) when is_list(List) ->
     {Key, [ decode({Key, N}) || N <- List ]};
 
-% XXX Strip the leading pad on 64-bit systems
-decode({Key, Val}) when is_binary(Val) ->
-    case erlang:system_info({wordsize,external}) of
-        8 ->
-            <<0,0,0,0, Bytes/binary>> = Val,
-            decode_1({Key, Bytes});
-        4 ->
-            decode_1({Key, Val})
-    end.
-
-
-decode_1({essid, <<Len:?UINT16, _Cmd:?UINT16, Rest/binary>>}) ->
-    Pad = pad(2+2),
+decode({essid, <<Len:?UINT16, _Cmd:?UINT16, Rest/binary>>}) ->
+    Pad = wordalign(2+2),
     <<0:Pad, ESSID:Len/bytes>> = Rest,
     ESSID;
 
 % struct sockadddr
-decode_1({bssid, <<
+decode({bssid, <<
         ?ARPHRD_ETHER:?UINT16,  % sa_family_t
         Bytes:6/bytes, 0:64     % sa_data: 14 bytes
         >>}) ->
     lists:flatten(string:join([ io_lib:format("~.16b", [N]) || <<N:8>> <= Bytes ], ":"));
 
-decode_1({ap, AP}) ->
-    decode_1({bssid, AP});
+decode({ap, AP}) ->
+    decode({bssid, AP});
 
-decode_1({mode, <<Mode:?UINT32>>}) ->
+decode({mode, <<Mode:?UINT32>>}) ->
     mode(Mode);
 
-decode_1({qual, <<Qual:8, Level:8/signed, Noise:8, Updated:8, _/binary>>}) ->
-    [{quality, Qual}, {level, Level}, {noise, Noise}, {updated, decode_1({updated, Updated})}];
+decode({qual, <<Qual:8, Level:8/signed, Noise:8, Updated:8, _/binary>>}) ->
+    [{quality, Qual}, {level, Level}, {noise, Noise}, {updated, decode({updated, Updated})}];
 
-decode_1({updated, Status}) when Status band ?IW_QUAL_QUAL_UPDATED == 1 ->
+decode({updated, Status}) when Status band ?IW_QUAL_QUAL_UPDATED == 1 ->
     true;
-decode_1({updated, _Status}) ->
+decode({updated, _Status}) ->
     false;
 
-decode_1({freq, <<Channel:?UINT64, _/binary>>}) when Channel < 1000 ->
+decode({freq, <<Channel:?UINT64, _/binary>>}) when Channel < 1000 ->
     {channel, Channel};
-decode_1({freq, <<M:?INT32, E:?INT16, _I:8, _Flags:8, _/binary>>}) ->
+decode({freq, <<M:?INT32, E:?INT16, _I:8, _Flags:8, _/binary>>}) ->
     {frequency, M*math:pow(10, E)};
 
-decode_1({power, Power}) ->
-    decode_1({param, Power});
+decode({power, Power}) ->
+    decode({param, Power});
 
-decode_1({param, <<Value:?INT32, Fixed:8, Disabled:8, Flags:?UINT32, _/binary>>}) ->
+decode({param, <<Value:?INT32, Fixed:8, Disabled:8, Flags:?UINT32, _/binary>>}) ->
     [{value, Value}, {fixed, Fixed}, {disabled, Disabled}, {flags, Flags}];
 
-decode_1({range, <<
+decode({range, <<
         Throughput:?UINT32,
         Min_nwid:?UINT32,
         Max_nwid:?UINT32,
@@ -206,8 +195,8 @@ decode_1({range, <<
         {scan_capa, Scan_capa},
         {event_capa, Event_capa},
         {sensitivity, Sensitivity},
-        {max_qual, decode_1({qual, Max_qual})},
-        {avg_qual, decode_1({qual, Avg_qual})},
+        {max_qual, decode({qual, Max_qual})},
+        {avg_qual, decode({qual, Avg_qual})},
         {num_bitrates, Num_bitrates},
         {bitrate, Bitrate},
         {min_rts, Min_rts},
@@ -239,7 +228,7 @@ decode_1({range, <<
         {max_r_time, Max_r_time},
         {num_channels, Num_channels},
         {num_frequency, Num_frequency},
-        {freq, decode_1({freq, Freq})},
+        {freq, decode({freq, Freq})},
         {enc_capa, Enc_capa},
         {min_pms, Min_pms},
         {max_pms, Max_pms}
@@ -249,11 +238,11 @@ decode_1({range, <<
 %        {bitrate_capa, Bitrate_capa}
     ];
 
-decode_1({_Key, Val}) ->
+decode({_Key, Val}) ->
     Val.
 
 % Return pad size in bits
-pad(Offset) ->
-    pad(Offset, erlang:system_info({wordsize, external})).
-pad(Offset, Align) ->
+wordalign(Offset) ->
+    wordalign(Offset, erlang:system_info({wordsize, external})).
+wordalign(Offset, Align) ->
     ((Align - (Offset rem Align)) rem Align) * 8.

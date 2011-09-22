@@ -92,6 +92,12 @@ ap(Socket, Dev) ->
 
     Pointer = erlang:system_info({wordsize, external}) * 8,
 
+    % struct iw_point
+    % {
+    %   void *pointer;
+    %   __u16 length;
+    %   __u16 flags;
+    % };
     case procket:ioctl(Socket, ?SIOCGIWSCAN, Req) of
         {ok, <<_Ifname:16/bytes, _Ptr:Pointer, Len:?UINT16, _Flag:?UINT16>>} ->
             Pad = (4096 - Len) * 8,
@@ -169,8 +175,9 @@ event(Buf) ->
 event(<<>>, #state{aps = APs}) ->
     [ {AP, orddict:to_list(N)} || {AP, N} <- gb_trees:to_list(APs) ];
 event(<<EventLen:?UINT16, Cmd:?UINT16, Buf/binary>>, #state{ap = AP, aps = APs}) ->
-    Len = EventLen - 4,
-    <<Event:Len/bytes, Rest/binary>> = Buf,
+    Pad = wierl:wordalign(2+2),
+    Len = EventLen - 4 - Pad div 8,
+    <<0:Pad, Event:Len/bytes, Rest/binary>> = Buf,
 
     case wierl:cmd(Cmd) of
         ap ->
