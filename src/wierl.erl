@@ -33,8 +33,8 @@
         format/1,
         decode/1,
         cmd/1,
-        mode/1
-
+        mode/1,
+        pad/1, pad/2
     ]).
 
 -include("wierl.hrl").
@@ -108,14 +108,17 @@ decode({Key, Val}) when is_binary(Val) ->
             decode_1({Key, Val})
     end.
 
-% What is 1?
-% kludge for padding on 64-bit
-decode_1({essid, <<Len:?UINT16, 1:?UINT16, 0,0,0,0, ESSID:Len/bytes, _/binary>>}) ->
-    ESSID;
-decode_1({essid, <<Len:?UINT16, 1:?UINT16, ESSID:Len/bytes, _/binary>>}) ->
+
+decode_1({essid, <<Len:?UINT16, _Cmd:?UINT16, Rest/binary>>}) ->
+    Pad = pad(2+2),
+    <<0:Pad, ESSID:Len/bytes>> = Rest,
     ESSID;
 
-decode_1({bssid, <<1,0, Bytes:6/bytes, 0,0,0,0,0,0,0,0, _/binary>>}) ->
+% struct sockadddr
+decode_1({bssid, <<
+        ?ARPHRD_ETHER:?UINT16,  % sa_family_t
+        Bytes:6/bytes, 0:64     % sa_data: 14 bytes
+        >>}) ->
     lists:flatten(string:join([ io_lib:format("~.16b", [N]) || <<N:8>> <= Bytes ], ":"));
 
 decode_1({ap, AP}) ->
@@ -248,3 +251,9 @@ decode_1({range, <<
 
 decode_1({_Key, Val}) ->
     Val.
+
+% Return pad size in bits
+pad(Offset) ->
+    pad(Offset, erlang:system_info({wordsize, external})).
+pad(Offset, Align) ->
+    ((Align - (Offset rem Align)) rem Align) * 8.

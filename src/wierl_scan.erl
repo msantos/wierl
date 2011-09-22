@@ -94,7 +94,8 @@ ap(Socket, Dev) ->
 
     case procket:ioctl(Socket, ?SIOCGIWSCAN, Req) of
         {ok, <<_Ifname:16/bytes, _Ptr:Pointer, Len:?UINT16, _Flag:?UINT16>>} ->
-            {ok, <<Stream:Len/bytes, _/binary>>} = procket:buf(Res),
+            Pad = (4096 - Len) * 8,
+            {ok, <<Stream:Len/bytes, 0:Pad>>} = procket:buf(Res),
             event(Stream);
 
         % Poll the socket for the results
@@ -160,6 +161,11 @@ event(Buf) ->
             aps = gb_trees:empty()
         }).
 
+% struct iw_event {
+%    __u16       len;
+%    __u16       cmd;
+%    union iwreq_data    u;
+% }
 event(<<>>, #state{aps = APs}) ->
     [ {AP, orddict:to_list(N)} || {AP, N} <- gb_trees:to_list(APs) ];
 event(<<EventLen:?UINT16, Cmd:?UINT16, Buf/binary>>, #state{ap = AP, aps = APs}) ->
