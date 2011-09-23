@@ -240,11 +240,6 @@ rfkill is a wireless soft kill switch.
 
 ## TODO
 
-* fix padding issues between 32/64-bit archs
-    * e.g., on 64-bit, this is broken:
-
-        wierl:decode({freq, wierl_config:param(<<"wlan0">>, freq)}).
-
 * get stats from /proc/net/wireless
 
 * wierl_monitor
@@ -253,3 +248,6 @@ rfkill is a wireless soft kill switch.
     * frame/1: allow the caller to specify the header type
 
 * support Mac OS X
+
+* wierl: support decoding
+    * encode, genie, name, rate
