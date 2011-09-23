@@ -87,6 +87,8 @@ mode(repeat) -> ?IW_MODE_REPEAT;
 mode(second) -> ?IW_MODE_SECOND;
 mode(monitor) -> ?IW_MODE_MONITOR.
 
+qual(<<Qual:8, Level:8/signed, Noise:8, Updated:8>>) ->
+    [{quality, Qual}, {level, Level}, {noise, Noise}, decode({updated, Updated})].
 
 % Pretty print the scan list
 format(Info) when is_list(Info) ->
@@ -101,28 +103,28 @@ decode({Key, List}) when is_list(List) ->
 decode({essid, <<Len:?UINT16, _Cmd:?UINT16, Rest/binary>>}) ->
     Pad = wordalign(2+2),
     <<0:Pad, ESSID:Len/bytes>> = Rest,
-    ESSID;
+    {essid, ESSID};
 
 % struct sockadddr
 decode({bssid, <<
         ?ARPHRD_ETHER:?UINT16,  % sa_family_t
         Bytes:6/bytes, 0:64     % sa_data: 14 bytes
         >>}) ->
-    lists:flatten(string:join([ io_lib:format("~.16b", [N]) || <<N:8>> <= Bytes ], ":"));
+    {bssid, lists:flatten(string:join([ io_lib:format("~.16b", [N]) || <<N:8>> <= Bytes ], ":"))};
 
 decode({ap, AP}) ->
     decode({bssid, AP});
 
 decode({mode, <<Mode:?UINT32>>}) ->
-    mode(Mode);
+    {mode, mode(Mode)};
 
-decode({qual, <<Qual:8, Level:8/signed, Noise:8, Updated:8, _/binary>>}) ->
-    [{quality, Qual}, {level, Level}, {noise, Noise}, {updated, decode({updated, Updated})}];
+decode({qual, Qual}) ->
+    {qual, qual(Qual)};
 
 decode({updated, Status}) when Status band ?IW_QUAL_QUAL_UPDATED == 1 ->
-    true;
+    {updated, true};
 decode({updated, _Status}) ->
-    false;
+    {updated, false};
 
 decode({freq, <<Channel:?UINT64, _/binary>>}) when Channel < 1000 ->
     {channel, Channel};
@@ -130,7 +132,7 @@ decode({freq, <<M:?INT32, E:?INT16, _I:8, _Flags:8, _/binary>>}) ->
     {frequency, M*math:pow(10, E)};
 
 decode({power, Power}) ->
-    decode({param, Power});
+    {power, decode({param, Power})};
 
 decode({param, <<Value:?INT32, Fixed:8, Disabled:8, Flags:?UINT32, _/binary>>}) ->
     [{value, Value}, {fixed, Fixed}, {disabled, Disabled}, {flags, Flags}];
@@ -186,7 +188,7 @@ decode({range, <<
 %        Bitrate_capa:?UINT32,
         _/binary
         >>}) ->
-    [
+    {range, [
         {throughput, Throughput},
         {min_nwid, Min_nwid},
         {max_nwid, Max_nwid},
@@ -195,8 +197,8 @@ decode({range, <<
         {scan_capa, Scan_capa},
         {event_capa, Event_capa},
         {sensitivity, Sensitivity},
-        {max_qual, decode({qual, Max_qual})},
-        {avg_qual, decode({qual, Avg_qual})},
+        {max_qual, qual(Max_qual)},
+        {avg_qual, qual(Avg_qual)},
         {num_bitrates, Num_bitrates},
         {bitrate, Bitrate},
         {min_rts, Min_rts},
@@ -236,10 +238,10 @@ decode({range, <<
 %        {pms_flags, Pms_flags},
 %        {modul_capa, Modul_capa},
 %        {bitrate_capa, Bitrate_capa}
-    ];
+    ]};
 
-decode({_Key, Val}) ->
-    Val.
+decode({_Key,_Val} = Unknown) ->
+    Unknown.
 
 % Return pad size in bits
 wordalign(Offset) ->
