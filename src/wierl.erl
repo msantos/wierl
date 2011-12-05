@@ -33,8 +33,7 @@
         format/1,
         decode/1,
         cmd/1,
-        mode/1,
-        wordalign/1, wordalign/2
+        mode/1
     ]).
 
 -include("wierl.hrl").
@@ -101,7 +100,7 @@ decode({Key, List}) when is_list(List) ->
     {Key, [ decode({Key, N}) || N <- List ]};
 
 decode({essid, <<Len:?UINT16, _Cmd:?UINT16, Rest/binary>>}) ->
-    Pad = wordalign(2+2),
+    Pad = procket:wordalign(2+2) * 8,
     <<0:Pad, ESSID:Len/bytes>> = Rest,
     {essid, ESSID};
 
@@ -242,9 +241,3 @@ decode({range, <<
 
 decode({_Key,_Val} = Unknown) ->
     Unknown.
-
-% Return pad size in bits
-wordalign(Offset) ->
-    wordalign(Offset, erlang:system_info({wordsize, external})).
-wordalign(Offset, Align) ->
-    ((Align - (Offset rem Align)) rem Align) * 8.

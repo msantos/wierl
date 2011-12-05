@@ -175,7 +175,7 @@ event(Buf) ->
 event(<<>>, #state{aps = APs}) ->
     [ {AP, orddict:to_list(N)} || {AP, N} <- gb_trees:to_list(APs) ];
 event(<<EventLen:?UINT16, Cmd:?UINT16, Buf/binary>>, #state{ap = AP, aps = APs}) ->
-    Pad = wierl:wordalign(2+2),
+    Pad = procket:wordalign(2+2) * 8,
     Len = EventLen - 4 - Pad div 8,
     <<0:Pad, Event:Len/bytes, Rest/binary>> = Buf,
 
