@@ -1,4 +1,4 @@
-%% Copyright (c) 2011, Michael Santos <michael.santos@gmail.com>
+%% Copyright (c) 2011-2012, Michael Santos <michael.santos@gmail.com>
 %% All rights reserved.
 %%
 %% Redistribution and use in source and binary forms, with or without
@@ -51,7 +51,7 @@
 
 header(<<
     Msgcode:?UINT32,
-    Msglen:?UINT32, 
+    Msglen:?UINT32,
     Devname:16/bytes,
 
     Hosttime:?PRISM_VALUE,
@@ -101,7 +101,7 @@ header(#ieee802_11_prism{
 
     list_to_binary([
             <<Msgcode:?UINT32,
-            Msglen:?UINT32, 
+            Msglen:?UINT32,
             (devname(Devname))/bytes>>,
 
             rec_to_bin(Hosttime),
@@ -133,13 +133,13 @@ prism_value(<<
         did = Did,
         status = Status,
         len = Len,
-        data = Data 
+        data = Data
     };
 prism_value(#prism_value{
         did = Did,
         status = Status,
         len = Len,
-        data = Data 
+        data = Data
     }) ->
     <<
     Did:?UINT32,

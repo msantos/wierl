@@ -1,4 +1,4 @@
-%% Copyright (c) 2011, Michael Santos <michael.santos@gmail.com>
+%% Copyright (c) 2011-2012, Michael Santos <michael.santos@gmail.com>
 %% All rights reserved.
 %%
 %% Redistribution and use in source and binary forms, with or without
@@ -159,7 +159,7 @@ essid(Dev, ESSID) when is_binary(ESSID), byte_size(ESSID) < ?IW_ESSID_MAX_SIZE -
 
 % The events are returned in the form: length, command, data
 % (length bytes)
-% 
+%
 % We believe the length returned in the packet and print out
 % the binary data. If the length is wrong, we'll just crash.
 event(Buf) ->
