@@ -4,7 +4,7 @@ wierl is a set of Erlang modules for interacting with 802.11 wireless
 devices on Linux.
 
 ## NOTE ON PRIVILEGES
- 
+
 To run this code, Erlang will either have to run as root or have
 CAP\_NET\_ADMIN privileges:
 
@@ -19,11 +19,11 @@ CAP\_NET\_ADMIN privileges:
     sudo setcap cap_net_admin=ep /path/to/beam
 
     ./start.sh
-    % Scan using the "wlan0" interface 
+    % Scan using the "wlan0" interface
     wierl_scan:list(<<"wlan0">>).
 
-    # Monitor mode: make sure the network manager is stopped. For example,
-    # on Ubuntu: service network-manager stop
+    % Monitor mode: make sure the network manager is stopped. For example,
+    % on Ubuntu: service network-manager stop
     {ok, Socket} = wierl_monitor:open(<<"wlan0">>),
     {ok, Frame} = wierl_monitor:read(Socket),
     wierl_monitor:frame(Socket, Frame).
@@ -56,12 +56,12 @@ CAP\_NET\_ADMIN privileges:
                     | rate
                 Options = [{essid, binary()}]
 
-    Initiate a wireless scan and return the scan list.
+        Initiate a wireless scan and return the scan list.
 
     wierl:format(AccessPoints) -> proplist()
 
-    Decode some of the binary data values returned in the list of
-    access points.
+        Decode some of the binary data values returned in the list of
+        access points.
 
 ### wierl_config
 
@@ -97,66 +97,66 @@ CAP\_NET\_ADMIN privileges:
                     | {rate, binary()}
                     | {power, binary()}
 
-    Query or set a wireless parameter.
+        Query or set a wireless parameter.
 
-    param/1 lists all parameters for the interface.
+        param/1 lists all parameters for the interface.
 
-    param/3 queries or sets a single parameter.
+        param/3 queries or sets a single parameter.
 
-    param/2 is a wrapper around param/3 that will open and close the
-    netlink socket for the caller.
+        param/2 is a wrapper around param/3 that will open and close the
+        netlink socket for the caller.
 
-    Use the wierl module to decode the values, e.g.,
+        Use the wierl module to decode the values, e.g.,
 
-        1> wierl_config:param(<<"wlan0">>, freq).
-        <<108,9,0,0,6,0,0,0,0,0,0,0,0,0,0,0>>
+            1> wierl_config:param(<<"wlan0">>, freq).
+            <<108,9,0,0,6,0,0,0,0,0,0,0,0,0,0,0>>
 
-        2> wierl:decode({freq,<<108,9,0,0,6,0,0,0,0,0,0,0,0,0,0,0>>}).
-        {frequency,2.412e9}
+            2> wierl:decode({freq,<<108,9,0,0,6,0,0,0,0,0,0,0,0,0,0,0>>}).
+            {frequency,2.412e9}
 
-    To set a parameter, use a key/value as the attribute, e.g.,
+        To set a parameter, use a key/value as the attribute, e.g.,
 
-        1> wierl_config:param(<<"wlan0">>, {essid, <<"MY ESSID">>}).
-        <<"MY ESSID">>
+            1> wierl_config:param(<<"wlan0">>, {essid, <<"MY ESSID">>}).
+            <<"MY ESSID">>
 
-    Depending on the parameter, the value can be either an integer or a
-    binary (which will be converted to a pointer to an iw_point struct
-    and may require assigning a value to the flag field of the structure).
+        Depending on the parameter, the value can be either an integer or a
+        binary (which will be converted to a pointer to an iw_point struct
+        and may require assigning a value to the flag field of the structure).
 
-    To change some parameters, the interface must first be brought
-    down. For example, to put the interface into monitor mode:
+        To change some parameters, the interface must first be brought
+        down. For example, to put the interface into monitor mode:
 
-        wierl_config:down(<<"wlan0">>),
-        wierl_config:param(<<"wlan0">>, {mode, wierl:mode(monitor)}),
-        wierl_config:up(<<"wlan0">>).
+            wierl_config:down(<<"wlan0">>),
+            wierl_config:param(<<"wlan0">>, {mode, wierl:mode(monitor)}),
+            wierl_config:up(<<"wlan0">>).
 
 
     up(Ifname) -> ok
 
         Types   Ifname = binary()
 
-    Configure the interface as up and running.
+        Configure the interface as up and running.
 
 
     down(Ifname) -> ok
 
         Types   Ifname = binary()
 
-    Bring down the interface.
+        Bring down the interface.
 
 
     open() -> {ok, FD}
 
         Types   FD = integer()
 
-    Obtain a netlink socket file descriptor.
+        Obtain a netlink socket file descriptor.
 
 
     close(FD) -> ok
 
         Types   FD = integer()
 
-    Close the file descriptor.
+        Close the file descriptor.
 
 ### wierl
 
@@ -167,17 +167,17 @@ CAP\_NET\_ADMIN privileges:
         Types   Interface = binary()
                 Socket = pid()
 		
-    Place a wireless network interface into monitor mode, returning a
-    file descriptor (the pid of a gen_server holding the fd) that can
-    be used for reading 802.11 frames.
+        Place a wireless network interface into monitor mode, returning a
+        file descriptor (the pid of a gen_server holding the fd) that can
+        be used for reading 802.11 frames.
 
     wierl_monitor:close(Socket) ->  ok | {error, posix()}
 
         Types   Socket = pid()
                 Interface = binary()
 
-    Close the file descriptor associated with the wireless device. close/1
-    leaves the device in monitor mode.
+        Close the file descriptor associated with the wireless device. close/1
+        leaves the device in monitor mode.
 
     wierl_monitor:read(Socket) -> {ok, Frame} | {error, posix()}
     wierl_monitor:read(Socket, Size) -> {ok, Frame} | {error, posix()}
@@ -186,14 +186,14 @@ CAP\_NET\_ADMIN privileges:
                 Size = integer()
                 Frame = binary()
 
-    Attempt to read a frame from the wireless device.
+        Attempt to read a frame from the wireless device.
 
     wierl_monitor:write(Socket, Frame) -> ok | {error, posix()}
 
         Types   Socket = pid()
                 Frame = binary()
 
-    Attempt to write a frame to the wireless device.
+        Attempt to write a frame to the wireless device.
 
     wierl_monitor:frame(Socket, Frame) -> {Radiotap, FrameControl,
         FrameBody, FrameCheckSequence} | {error, bad_frame}
@@ -214,11 +214,11 @@ CAP\_NET\_ADMIN privileges:
                     | #ieee802_11_data{}
                 FrameCheckSequence = integer()
 
-    Encode or decode an 802.11 wireless frame between binaries and
-    records. Include the wierl_frame header to have access to the
-    record structures:
+        Encode or decode an 802.11 wireless frame between binaries and
+        records. Include the wierl_frame header to have access to the
+        record structures:
 
-    -include("include/wierl_frame.hrl")
+            -include("include/wierl_frame.hrl")
 
 
 ### rfkill
@@ -227,15 +227,15 @@ rfkill is a wireless soft kill switch.
 
     block() -> ok | {error, posix()}
 
-    Disable wireless devices.
+        Disable wireless devices.
 
     unblock() -> ok | {error, posix()}
 
-    Enable wireless devices.
+        Enable wireless devices.
 
     list() -> ok | {error, posix()}
 
-    Monitor rfkill device events.
+        Monitor rfkill device events.
 
 
 ## TODO
