@@ -1,4 +1,4 @@
-%% Copyright (c) 2011, Michael Santos <michael.santos@gmail.com>
+%% Copyright (c) 2011-2012, Michael Santos <michael.santos@gmail.com>
 %% All rights reserved.
 %%
 %% Redistribution and use in source and binary forms, with or without
@@ -37,41 +37,8 @@
     ]).
 
 -include("wierl.hrl").
+-include("rfkill.hrl").
 
--define(RFKILL_STATE_SOFT_BLOCKED, 0).
--define(RFKILL_STATE_UNBLOCKED, 1).
--define(RFKILL_STATE_HARD_BLOCKED, 2).
-
--define(RFKILL_OP_ADD, 0).
--define(RFKILL_OP_DEL, 1).
--define(RFKILL_OP_CHANGE, 2).
--define(RFKILL_OP_CHANGE_ALL, 3).
-
--define(RFKILL_TYPE_ALL, 0).
--define(RFKILL_TYPE_WLAN, 1).
--define(RFKILL_TYPE_BLUETOOTH, 2).
--define(RFKILL_TYPE_UWB, 3).
--define(RFKILL_TYPE_WIMAX, 4).
--define(RFKILL_TYPE_WWAN, 5).
--define(RFKILL_TYPE_GPS, 6).
--define(RFKILL_TYPE_FM, 7).
-
--define(BLOCK, 1).
--define(UNBLOCK, 0).
-
-%% struct rfkill_event {
-%%     __u32 idx;
-%%     __u8  type;
-%%     __u8  op;
-%%     __u8  soft, hard;
-%% } __packed;
--record(rfkill_event, {
-        idx = 0,
-        type = 0,
-        op = 0,
-        soft = 0,
-        hard = 0
-    }).
 
 block() ->
     write(block(on)).

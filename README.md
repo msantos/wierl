@@ -225,6 +225,9 @@ CAP\_NET\_ADMIN privileges:
 
 rfkill is a wireless soft kill switch.
 
+    -include("include/rfkill.hrl")
+
+
     block() -> ok | {error, posix()}
 
         Disable wireless devices.
@@ -233,7 +236,7 @@ rfkill is a wireless soft kill switch.
 
         Enable wireless devices.
 
-    list() -> ok | {error, posix()}
+    list() -> #rfkill_event{} | {error, posix()}
 
         Monitor rfkill device events.
 
