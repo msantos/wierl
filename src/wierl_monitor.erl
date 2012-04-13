@@ -1,4 +1,4 @@
-%% Copyright (c) 2011, Michael Santos <michael.santos@gmail.com>
+%% Copyright (c) 2011-2012, Michael Santos <michael.santos@gmail.com>
 %% All rights reserved.
 %%
 %% Redistribution and use in source and binary forms, with or without
@@ -88,18 +88,14 @@ write(Ref, Frame) ->
 
 % Encode a complete frame
 frame(Ref, {Header, #ieee802_11_fc{} = FC, FB}) when is_tuple(FB) ->
-    try frame_encode(Ref, {Header, FC, FB}) of
-        N ->
-            N
+    try frame_encode(Ref, {Header, FC, FB})
     catch
         error:_ ->
             {error, bad_frame}
     end;
 % Decode a complete frame
 frame(Ref, Frame) when is_binary(Frame) ->
-    try frame_decode(Ref, Frame) of
-        N ->
-            N
+    try frame_decode(Ref, Frame)
     catch
         error:_ ->
             {error, bad_frame}
