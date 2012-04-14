@@ -83,21 +83,8 @@ list_1(FD) ->
     {ok, Data} = procket:read(FD, 8),
 
     case event(Data) of
-        #rfkill_event{
-            op = ?RFKILL_OP_ADD,
-
-            idx = Idx,
-            type = Type,
-            soft = Soft,
-            hard = Hard
-        } ->
-            {rfkill_event, [
-                {idx, Idx},
-                {type, Type},
-                {op, ?RFKILL_OP_ADD},
-                {soft, Soft},
-                {hard, Hard}
-            ]};
+        #rfkill_event{op = ?RFKILL_OP_ADD} = Event ->
+            Event;
         {error, eagain} ->
             timer:sleep(10),
             list_1(FD);
