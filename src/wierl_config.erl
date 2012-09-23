@@ -211,7 +211,7 @@ req(rate) -> ?SIOCGIWRATE;
 req(power) -> ?SIOCGIWPOWER.
 
 set(essid) -> ?SIOCSIWESSID;
-set(mode) -> ?SIOCSIWMODE ; 
+set(mode) -> ?SIOCSIWMODE;
 set(freq) -> ?SIOCSIWFREQ;
 set(channel) -> ?SIOCSIWFREQ;
 set(bit) -> ?SIOCSIWRATE;
