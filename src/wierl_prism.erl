@@ -50,8 +50,8 @@
 %% http://home.martin.cc/linux/prism
 
 header(<<
-    Msgcode:?UINT32,
-    Msglen:?UINT32,
+    ?UINT32(Msgcode),
+    ?UINT32(Msglen),
     Devname:16/bytes,
 
     Hosttime:?PRISM_VALUE,
@@ -100,8 +100,8 @@ header(#ieee802_11_prism{
 
 
     list_to_binary([
-            <<Msgcode:?UINT32,
-            Msglen:?UINT32,
+            <<?UINT32(Msgcode),
+            ?UINT32(Msglen),
             (devname(Devname))/bytes>>,
 
             rec_to_bin(Hosttime),
@@ -124,10 +124,10 @@ rec_to_bin(#prism_value{} = Value) ->
 
 
 prism_value(<<
-    Did:?UINT32,
-    Status:?UINT16,
-    Len:?UINT16,
-    Data:?UINT32
+    ?UINT32(Did),
+    ?UINT16(Status),
+    ?UINT16(Len),
+    ?UINT32(Data)
     >>) ->
     #prism_value{
         did = Did,
@@ -142,10 +142,10 @@ prism_value(#prism_value{
         data = Data
     }) ->
     <<
-    Did:?UINT32,
-    Status:?UINT16,
-    Len:?UINT16,
-    Data:?UINT32
+    ?UINT32(Did),
+    ?UINT16(Status),
+    ?UINT16(Len),
+    ?UINT32(Data)
     >>.
 
 % Pad the device name to IFNAMSIZ bytes

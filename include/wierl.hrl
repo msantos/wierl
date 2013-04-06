@@ -29,19 +29,19 @@
 %% ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 %% POSSIBILITY OF SUCH DAMAGE.
 
--define(UINT16, 2/native-unsigned-integer-unit:8).
--define(UINT32, 4/native-unsigned-integer-unit:8).
--define(UINT64, 8/native-unsigned-integer-unit:8).
+-define(UINT16(N), N:2/native-unsigned-integer-unit:8).
+-define(UINT32(N), N:4/native-unsigned-integer-unit:8).
+-define(UINT64(N), N:8/native-unsigned-integer-unit:8).
 
--define(UINT16LE, 2/little-unsigned-integer-unit:8).
--define(UINT32LE, 4/little-unsigned-integer-unit:8).
--define(UINT64LE, 8/little-unsigned-integer-unit:8).
+-define(UINT16LE(N), N:2/little-unsigned-integer-unit:8).
+-define(UINT32LE(N), N:4/little-unsigned-integer-unit:8).
+-define(UINT64LE(N), N:8/little-unsigned-integer-unit:8).
 
--define(INT16, 2/native-signed-integer-unit:8).
--define(INT32, 4/native-signed-integer-unit:8).
+-define(INT16(N), N:2/native-signed-integer-unit:8).
+-define(INT32(N), N:4/native-signed-integer-unit:8).
 
--define(INT16LE, 2/little-signed-integer-unit:8).
--define(INT32LE, 4/little-signed-integer-unit:8).
+-define(INT16LE(N), N:2/little-signed-integer-unit:8).
+-define(INT32LE(N), N:4/little-signed-integer-unit:8).
 
 -define(IFNAMSIZ, 16).
 -define(SIOCSIWSCAN, 16#8B18).  % Trigger a scan

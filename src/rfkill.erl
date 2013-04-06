@@ -49,14 +49,14 @@ block(on) -> block(?BLOCK);
 block(off) -> block(?UNBLOCK);
 
 block(Block) when is_integer(Block) ->
-    <<0:?UINT32,                            % idx
+    <<?UINT32(0),                            % idx
     0:8,                                    % type
     ?RFKILL_OP_CHANGE_ALL:8,                % op
     Block:8,                                % soft
     0:8                                     % hard
     >>.
 
-event(<<Idx:?UINT32,
+event(<<?UINT32(Idx),
     Type:8,
     Op:8,
     Soft:8,

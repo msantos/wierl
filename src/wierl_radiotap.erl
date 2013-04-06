@@ -49,8 +49,8 @@
 %% See:
 %% http://netbsd.gw.com/cgi-bin/man-cgi?ieee80211_radiotap+9+NetBSD-current
 
-header(<<Version:8, Pad:8, Len:?UINT16LE,
-    Present:?UINT32LE,
+header(<<Version:8, Pad:8, ?UINT16LE(Len),
+    ?UINT32LE(Present),
     Frame/binary>>) ->
 
     Size = Len-8,
@@ -75,8 +75,8 @@ header(#ieee802_11_radiotap{
 
     {Bitmap, Header} = extension(Extensions),
 
-    <<Version:8, Pad:8, Len:?UINT16LE,
-    Bitmap:?UINT32LE,
+    <<Version:8, Pad:8, ?UINT16LE(Len),
+    ?UINT32LE(Bitmap),
     Header/bytes, Rest/binary>>.
 
 
@@ -175,10 +175,10 @@ extension(Extensions) when is_list(Extensions) ->
 
 %% See:
 %% https://github.com/mcr/tcpdump/blob/master/ieee802_11_radio.h
-field(tsft, <<Microsec:?UINT64, Data/binary>>) ->
+field(tsft, <<?UINT64(Microsec), Data/binary>>) ->
     {{tsft, Microsec}, Data};
 
-field(channel, <<Channel:?UINT16, Flags:?UINT16, Data/binary>>) ->
+field(channel, <<?UINT16(Channel), ?UINT16(Flags), Data/binary>>) ->
     {{channel, Channel, Flags}, Data};
 
 field(fhss, <<Hop:8, Pattern:8, Data/binary>>) ->
@@ -204,10 +204,10 @@ field(db_antnoise, <<Noise:8, Data/binary>>) ->
 field(lock_quality, <<Qual:8, Data/binary>>) ->
     {{lock_quality, Qual}, Data};
 
-field(tx_attenuation, <<Power:?UINT16, Data/binary>>) ->
+field(tx_attenuation, <<?UINT16(Power), Data/binary>>) ->
     {{tx_attenuation, Power}, Data};
 
-field(db_tx_attenuation, <<Power:?UINT16, Data/binary>>) ->
+field(db_tx_attenuation, <<?UINT16(Power), Data/binary>>) ->
     {{db_tx_attenuation, Power}, Data};
 
 field(dbm_tx_power, <<Power:8, Data/binary>>) ->
@@ -222,20 +222,20 @@ field(antenna, <<Index:8, Data/binary>>) ->
 field(rx_flags, <<Bitmap:8, Data/binary>>) ->
     {{rx_flags, Bitmap}, Data};
 
-field(xchannel, <<Bitmap:?UINT32, Mhz:?UINT16, Channel:8, Max_power:8, Data/binary>>) ->
+field(xchannel, <<?UINT32(Bitmap), ?UINT16(Mhz), Channel:8, Max_power:8, Data/binary>>) ->
     {{xchannel, Bitmap, Mhz, Channel, Max_power}, Data};
 
 field(mcs, <<Known:8, Flags:8, Mcs:8, Data/binary>>) ->
     {{mcs, Known, Flags, Mcs}, Data};
 
-field(vendor_namespace, <<OUI1:8, OUI2:8, OUI3:8, Subspace:8, Len:?UINT16, Data/binary>>) ->
+field(vendor_namespace, <<OUI1:8, OUI2:8, OUI3:8, Subspace:8, ?UINT16(Len), Data/binary>>) ->
     {{vendor_namespace, {OUI1, OUI2, OUI3}, Subspace, Len}, Data}.
 
 field({tsft, Microsec}) ->
-    <<Microsec:?UINT64>>;
+    <<?UINT64(Microsec)>>;
 
 field({channel, Channel, Flags}) ->
-    <<Channel:?UINT16, Flags:?UINT16>>;
+    <<?UINT16(Channel), ?UINT16(Flags)>>;
 
 field({fhss, Hop, Pattern}) ->
     <<Hop:8, Pattern:8>>;
@@ -261,10 +261,10 @@ field({lock_quality, Qual}) ->
     <<Qual:8>>;
 
 field({tx_attenuation, Power}) ->
-    <<Power:?UINT16>>;
+    <<?UINT16(Power)>>;
 
 field({db_tx_attenuation, Power}) ->
-    <<Power:?UINT16>>;
+    <<?UINT16(Power)>>;
 
 field({dbm_tx_power, Power}) ->
     <<Power:8>>;
@@ -279,13 +279,13 @@ field({rx_flags, Bitmap}) ->
     <<Bitmap:8>>;
 
 field({xchannel, Bitmap, Mhz, Channel, Max_power}) ->
-    <<Bitmap:?UINT32, Mhz:?UINT16, Channel:8, Max_power:8>>;
+    <<?UINT32(Bitmap), ?UINT16(Mhz), Channel:8, Max_power:8>>;
 
 field({mcs, Known, Flags, Mcs}) ->
     <<Known:8, Flags:8, Mcs:8>>;
 
 field({vendor_namespace, {OUI1, OUI2, OUI3}, Subspace, Len}) ->
-    <<OUI1:8, OUI2:8, OUI3:8, Subspace:8, Len:?UINT16>>.
+    <<OUI1:8, OUI2:8, OUI3:8, Subspace:8, ?UINT16(Len)>>.
 
 %%-------------------------------------------------------------------------
 %%% Internal functions

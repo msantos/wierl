@@ -91,7 +91,7 @@ param(Socket, Dev, Key) when is_atom(Key) ->
 %% Change wireless setting
 %%
 param(Socket, Dev, {Key, Val}) when is_atom(Key), is_integer(Val) ->
-    Struct = <<Val:?UINT32, 0:(12*8)>>,
+    Struct = <<?UINT32(Val), 0:(12*8)>>,
     ioctl(Socket, Dev, set(Key), Struct);
 param(Socket, Dev, {essid, Val}) when is_binary(Val) ->
     ioctl_point(Socket, Dev, set(essid), Val, 1);
@@ -146,13 +146,13 @@ ioctl_point(Socket, Dev, Req, Alloc, Flags) ->
     {ok, Struct, [Res]} = procket:alloc([
             <<Dev/bytes, 0:Bits, 0>>,
             {ptr, Alloc},
-            <<ReqLen:?UINT16, Flags:?UINT16>>
+            <<?UINT16(ReqLen), ?UINT16(Flags)>>
         ]),
 
     Pointer = erlang:system_info({wordsize, external}) * 8,
 
     case procket:ioctl(Socket, Req, Struct) of
-        {ok, <<Dev:Len/bytes, 0:Bits, 0, _Ptr:Pointer, ValLen:?UINT16, _Flag:?UINT16>>} ->
+        {ok, <<Dev:Len/bytes, 0:Bits, 0, _Ptr:Pointer, ?UINT16(ValLen), ?UINT16(_Flag)>>} ->
             {ok, <<Val:ValLen/bytes, _/binary>>} = procket:buf(Res),
             {ok, Val};
         {error, _} = Error ->
@@ -182,7 +182,7 @@ down(Dev) when byte_size(Dev) < ?IFNAMSIZ ->
 
 set_flag(FD, Dev, Flag) ->
     Res = procket:ioctl(FD, ?SIOCSIFFLAGS,
-        <<Dev/bytes, 0:((15-byte_size(Dev))*8), 0:8, Flag:?UINT16, 0:(14*8)>>),
+        <<Dev/bytes, 0:((15-byte_size(Dev))*8), 0:8, ?UINT16(Flag), 0:(14*8)>>),
     case Res of
         {ok, _} -> ok;
         Error -> Error
@@ -192,7 +192,7 @@ get_flag(FD, Dev) ->
     Res = procket:ioctl(FD, ?SIOCGIFFLAGS,
         <<Dev/bytes, 0:((15-byte_size(Dev))*8), 0:(16*8)>>),
     case Res of
-        {ok, <<_:(16*8), Flag:?UINT16, _/binary>>} ->
+        {ok, <<_:(16*8), ?UINT16(Flag), _/binary>>} ->
             {ok, Flag};
         Error ->
             Error

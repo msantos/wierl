@@ -99,14 +99,14 @@ param(Param) ->
 decode({Key, List}) when is_list(List) ->
     {Key, [ decode({Key, N}) || N <- List ]};
 
-decode({essid, <<Len:?UINT16, _Cmd:?UINT16, Rest/binary>>}) ->
+decode({essid, <<?UINT16(Len), ?UINT16(_Cmd), Rest/binary>>}) ->
     Pad = procket:wordalign(2+2) * 8,
     <<0:Pad, ESSID:Len/bytes>> = Rest,
     {essid, ESSID};
 
 % struct sockadddr
 decode({bssid, <<
-        ?ARPHRD_ETHER:?UINT16,  % sa_family_t
+        ?UINT16(?ARPHRD_ETHER), % sa_family_t
         Bytes:6/bytes, 0:64     % sa_data: 14 bytes
         >>}) ->
     {bssid, lists:flatten(string:join([ io_lib:format("~.16b", [N]) || <<N:8>> <= Bytes ], ":"))};
@@ -114,7 +114,7 @@ decode({bssid, <<
 decode({ap, AP}) ->
     decode({bssid, AP});
 
-decode({mode, <<Mode:?UINT32>>}) ->
+decode({mode, <<?UINT32(Mode)>>}) ->
     {mode, mode(Mode)};
 
 decode({qual, Qual}) ->
@@ -125,66 +125,66 @@ decode({updated, Status}) when Status band ?IW_QUAL_QUAL_UPDATED == 1 ->
 decode({updated, _Status}) ->
     {updated, false};
 
-decode({freq, <<Channel:?UINT64, _/binary>>}) when Channel < 1000 ->
+decode({freq, <<?UINT64(Channel), _/binary>>}) when Channel < 1000 ->
     {channel, Channel};
-decode({freq, <<M:?INT32, E:?INT16, _I:8, _Flags:8, _/binary>>}) ->
+decode({freq, <<?INT32(M), ?INT16(E), _I:8, _Flags:8, _/binary>>}) ->
     {frequency, M*math:pow(10, E)};
 
 decode({power, Power}) ->
     {power, decode({param, Power})};
 
-decode({param, <<Value:?INT32, Fixed:8, Disabled:8, Flags:?UINT32, _/binary>>}) ->
+decode({param, <<?INT32(Value), Fixed:8, Disabled:8, ?UINT32(Flags), _/binary>>}) ->
     [{value, Value}, {fixed, Fixed}, {disabled, Disabled}, {flags, Flags}];
 
 decode({range, <<
-        Throughput:?UINT32,
-        Min_nwid:?UINT32,
-        Max_nwid:?UINT32,
-        Old_num_channels:?UINT16,
+        ?UINT32(Throughput),
+        ?UINT32(Min_nwid),
+        ?UINT32(Max_nwid),
+        ?UINT16(Old_num_channels),
         Old_num_frequency:8,
         Scan_capa:8,
         Event_capa:(6*4)/bytes,
-        Sensitivity:?INT32,
+        ?INT32(Sensitivity),
         Max_qual:4/bytes,
         Avg_qual:4/bytes,
         Num_bitrates:8,
         Bitrate:(?IW_MAX_BITRATES*4)/bytes,
-        Min_rts:?INT32,
-        Max_rts:?INT32,
-        Min_frag:?INT32,
-        Max_frag:?INT32,
-        Min_pmp:?INT32,
-        Max_pmp:?INT32,
-        Min_pmt:?INT32,
-        Max_pmt:?INT32,
-        Pmp_flags:?UINT16,
-        Pmt_flags:?UINT16,
-        Pm_capa:?UINT16,
+        ?INT32(Min_rts),
+        ?INT32(Max_rts),
+        ?INT32(Min_frag),
+        ?INT32(Max_frag),
+        ?INT32(Min_pmp),
+        ?INT32(Max_pmp),
+        ?INT32(Min_pmt),
+        ?INT32(Max_pmt),
+        ?UINT16(Pmp_flags),
+        ?UINT16(Pmt_flags),
+        ?UINT16(Pm_capa),
         Encoding_size:(?IW_MAX_ENCODING_SIZES*2)/bytes,
         Num_encoding_sizes:8,
         Max_encoding_tokens:8,
         Encoding_login_index:8,
-        Txpower_capa:?UINT16,
+        ?UINT16(Txpower_capa),
         Num_txpower:8,
         Txpower:(?IW_MAX_TXPOWER*4)/bytes,
         We_version_compiled:8,
         We_version_source:8,
-        Retry_capa:?UINT16,
-        Retry_flags:?UINT16,
-        R_time_flags:?UINT16,
-        Min_retry:?INT32,
-        Max_retry:?INT32,
-        Min_r_time:?INT32,
-        Max_r_time:?INT32,
-        Num_channels:?UINT16,
+        ?UINT16(Retry_capa),
+        ?UINT16(Retry_flags),
+        ?UINT16(R_time_flags),
+        ?INT32(Min_retry),
+        ?INT32(Max_retry),
+        ?INT32(Min_r_time),
+        ?INT32(Max_r_time),
+        ?UINT16(Num_channels),
         Num_frequency:8,
         Freq:(?IW_MAX_FREQUENCIES*8)/bytes,
-        Enc_capa:?UINT32,
-        Min_pms:?INT32,
-        Max_pms:?INT32,
-%        Pms_flags:?UINT16,
-%        Modul_capa:?INT32,
-%        Bitrate_capa:?UINT32,
+        ?UINT32(Enc_capa),
+        ?INT32(Min_pms),
+        ?INT32(Max_pms),
+%        ?UINT16(Pms_flags),
+%        ?INT32(Modul_capa),
+%        ?UINT32(Bitrate_capa:?UINT32)
         _/binary
         >>}) ->
     {range, [

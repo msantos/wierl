@@ -100,12 +100,12 @@ control(#ieee802_11_fc{
 
 % Association request
 type(#ieee802_11_fc{type = 0, subtype = 0},
-    <<Duration:?UINT16LE,
+    <<?UINT16LE(Duration),
     DA:6/bytes, SA:6/bytes, BSSID:6/bytes,
-    SeqCtl:?UINT16LE,
+    ?UINT16LE(SeqCtl),
 
-    Capability:?UINT16LE,
-    Listen:?UINT16LE,
+    ?UINT16LE(Capability),
+    ?UINT16LE(Listen),
 
     Data/binary>>) ->
 
@@ -125,13 +125,13 @@ type(#ieee802_11_fc{type = 0, subtype = 0},
 % Association response
 % Re-association response
 type(#ieee802_11_fc{type = 0, subtype = Subtype},
-    <<Duration:?UINT16LE,
+    <<?UINT16LE(Duration),
     DA:6/bytes, SA:6/bytes, BSSID:6/bytes,
-    SeqCtl:?UINT16LE,
+    ?UINT16LE(SeqCtl),
 
-    Capability:?UINT16LE,
-    Status:?UINT16LE,
-    Aid:?UINT16LE,
+    ?UINT16LE(Capability),
+    ?UINT16LE(Status),
+    ?UINT16LE(Aid),
 
     Data/binary>>) when Subtype == 1; Subtype == 3 ->
 
@@ -150,12 +150,12 @@ type(#ieee802_11_fc{type = 0, subtype = Subtype},
 
 % Re-association request
 type(#ieee802_11_fc{type = 0, subtype = 2},
-    <<Duration:?UINT16LE,
+    <<?UINT16LE(Duration),
     DA:6/bytes, SA:6/bytes, BSSID:6/bytes,
-    SeqCtl:?UINT16LE,
+    ?UINT16LE(SeqCtl),
 
-    Capability:?UINT16LE,
-    Listen:?UINT16LE,
+    ?UINT16LE(Capability),
+    ?UINT16LE(Listen),
     AP:6/bytes,
 
     Data/binary>>) ->
@@ -175,9 +175,9 @@ type(#ieee802_11_fc{type = 0, subtype = 2},
 
 % Probe request
 type(#ieee802_11_fc{type = 0, subtype = 4},
-    <<Duration:?UINT16LE,
+    <<?UINT16LE(Duration),
     DA:6/bytes, SA:6/bytes, BSSID:6/bytes,
-    SeqCtl:?UINT16LE,
+    ?UINT16LE(SeqCtl),
 
     Data/binary>>) ->
 
@@ -195,13 +195,13 @@ type(#ieee802_11_fc{type = 0, subtype = 4},
 
 % Probe response
 type(#ieee802_11_fc{type = 0, subtype = 5},
-    <<Duration:?UINT16LE,
+    <<?UINT16LE(Duration),
     DA:6/bytes, SA:6/bytes, BSSID:6/bytes,
-    SeqCtl:?UINT16LE,
+    ?UINT16LE(SeqCtl),
 
     Timestamp:8/bytes,
-    Beacon:?UINT16LE,
-    Capability:?UINT16LE,
+    ?UINT16LE(Beacon),
+    ?UINT16LE(Capability),
 
     Data/binary>>) ->
 
@@ -220,13 +220,13 @@ type(#ieee802_11_fc{type = 0, subtype = 5},
 
 % Beacon
 type(#ieee802_11_fc{type = 0, subtype = 8},
-    <<Duration:?UINT16LE,
+    <<?UINT16LE(Duration),
     DA:6/bytes, SA:6/bytes, BSSID:6/bytes,
-    SeqCtl:?UINT16LE,
+    ?UINT16LE(SeqCtl),
 
     Timestamp:8/bytes,
-    Interval:?UINT16LE,
-    Capability:?UINT16LE,
+    ?UINT16LE(Interval),
+    ?UINT16LE(Capability),
 
     Data/binary>>) ->
 
@@ -245,9 +245,9 @@ type(#ieee802_11_fc{type = 0, subtype = 8},
 
 % IBSS ATIM
 type(#ieee802_11_fc{type = 0, subtype = 9},
-    <<Duration:?UINT16LE,
+    <<?UINT16LE(Duration),
     DA:6/bytes, SA:6/bytes, BSSID:6/bytes,
-    SeqCtl:?UINT16LE>>) ->
+    ?UINT16LE(SeqCtl)>>) ->
     {#ieee802_11_management{
             duration = Duration,
             da = DA,
@@ -256,9 +256,9 @@ type(#ieee802_11_fc{type = 0, subtype = 9},
             seq_ctl = field(seq_ctl, SeqCtl)
         }, <<>>};
 type(#ieee802_11_fc{type = 0, subtype = 9},
-    <<Duration:?UINT16LE,
+    <<?UINT16LE(Duration),
     DA:6/bytes, SA:6/bytes, BSSID:6/bytes,
-    SeqCtl:?UINT16LE, FCS:4/bytes>>) ->
+    ?UINT16LE(SeqCtl), FCS:4/bytes>>) ->
     {#ieee802_11_management{
             duration = Duration,
             da = DA,
@@ -269,11 +269,11 @@ type(#ieee802_11_fc{type = 0, subtype = 9},
 
 % Disassociation
 type(#ieee802_11_fc{type = 0, subtype = 10},
-    <<Duration:?UINT16LE,
+    <<?UINT16LE(Duration),
     DA:6/bytes, SA:6/bytes, BSSID:6/bytes,
-    SeqCtl:?UINT16LE,
+    ?UINT16LE(SeqCtl),
 
-    Reason:?UINT16LE, Vendor/binary
+    ?UINT16LE(Reason), Vendor/binary
     >>) ->
     {#ieee802_11_management{
             duration = Duration,
@@ -287,13 +287,13 @@ type(#ieee802_11_fc{type = 0, subtype = 10},
 
 % Authentication
 type(#ieee802_11_fc{type = 0, subtype = 11},
-    <<Duration:?UINT16LE,
+    <<?UINT16LE(Duration),
     DA:6/bytes, SA:6/bytes, BSSID:6/bytes,
-    SeqCtl:?UINT16LE,
+    ?UINT16LE(SeqCtl),
 
-    Alg:?UINT16LE,
-    TransSeqNum:?UINT16LE,
-    Status:?UINT16LE,
+    ?UINT16LE(Alg),
+    ?UINT16LE(TransSeqNum),
+    ?UINT16LE(Status),
 
     Data/binary>>) ->
 
@@ -312,11 +312,11 @@ type(#ieee802_11_fc{type = 0, subtype = 11},
 
 % Deauthentication
 type(#ieee802_11_fc{type = 0, subtype = 12},
-    <<Duration:?UINT16LE,
+    <<?UINT16LE(Duration),
     DA:6/bytes, SA:6/bytes, BSSID:6/bytes,
-    SeqCtl:?UINT16LE,
+    ?UINT16LE(SeqCtl),
 
-    Reason:?UINT16LE, Vendor/binary>>) ->
+    ?UINT16LE(Reason), Vendor/binary>>) ->
     {#ieee802_11_management{
             duration = Duration,
             da = DA,
@@ -329,9 +329,9 @@ type(#ieee802_11_fc{type = 0, subtype = 12},
 
 % Action
 type(#ieee802_11_fc{type = 0, subtype = 11},
-    <<Duration:?UINT16LE,
+    <<?UINT16LE(Duration),
     DA:6/bytes, SA:6/bytes, BSSID:6/bytes,
-    SeqCtl:?UINT16LE,
+    ?UINT16LE(SeqCtl),
 
     Category, Action/binary>>) ->
     {#ieee802_11_management{
@@ -347,8 +347,8 @@ type(#ieee802_11_fc{type = 0, subtype = 11},
 % Unhandled, valid management frames
 % Reserved: 0110-0111, 1110-1111
 type(#ieee802_11_fc{type = 0, subtype = Subtype},
-    <<Duration:?UINT16LE, DA:6/bytes, SA:6/bytes, BSSID:6/bytes,
-    SeqCtl:?UINT16LE, Body/binary>>) when Subtype band 2#0110 /= 2#0110 ->
+    <<?UINT16LE(Duration), DA:6/bytes, SA:6/bytes, BSSID:6/bytes,
+    ?UINT16LE(SeqCtl), Body/binary>>) when Subtype band 2#0110 /= 2#0110 ->
     {#ieee802_11_management{
             duration = Duration,
             da = DA,
@@ -368,7 +368,7 @@ type(#ieee802_11_fc{type = 0},
 
             body = Body
         }) ->
-    <<Duration:?UINT16LE,
+    <<?UINT16LE(Duration),
     DA:6/bytes, SA:6/bytes, BSSID:6/bytes,
     SeqCtl:12, FragNum:4, (elements_to_bin(Body))/binary>>;
 
@@ -380,7 +380,7 @@ type(#ieee802_11_fc{type = 0},
 % Request to send (RTS)
 type(#ieee802_11_fc{type = 1,
         subtype = 16#B},
-    <<Duration:?UINT16LE,
+    <<?UINT16LE(Duration),
     RA:6/bytes, TA:6/bytes>>) ->
     {#ieee802_11_cf_rts{
             duration = Duration,
@@ -389,8 +389,8 @@ type(#ieee802_11_fc{type = 1,
         }, <<>>};
 type(#ieee802_11_fc{type = 1,
         subtype = 16#B},
-    <<Duration:?UINT16LE,
-    RA:6/bytes, TA:6/bytes, FCS:?UINT32>>) ->
+    <<?UINT16LE(Duration),
+    RA:6/bytes, TA:6/bytes, ?UINT32(FCS)>>) ->
     {#ieee802_11_cf_rts{
             duration = Duration,
             ra = RA,
@@ -403,20 +403,20 @@ type(#ieee802_11_fc{type = 1,
             ra = RA,
             ta = TA
         }) ->
-    <<Duration:?UINT16LE,
+    <<?UINT16LE(Duration),
     RA:6/bytes, TA:6/bytes>>;
 
 % Clear to send (CTS)
 type(#ieee802_11_fc{type = 1,
         subtype = 16#C},
-    <<Duration:?UINT16LE, RA:6/bytes>>) ->
+    <<?UINT16LE(Duration), RA:6/bytes>>) ->
     {#ieee802_11_cf_cts{
             duration = Duration,
             ra = RA
     }, <<>>};
 type(#ieee802_11_fc{type = 1,
         subtype = 16#C},
-    <<Duration:?UINT16LE, RA:6/bytes, FCS:4/bytes>>) ->
+    <<?UINT16LE(Duration), RA:6/bytes, FCS:4/bytes>>) ->
     {#ieee802_11_cf_cts{
             duration = Duration,
             ra = RA
@@ -427,19 +427,19 @@ type(#ieee802_11_fc{type = 1,
             duration = Duration,
             ra = RA
         }) ->
-    <<Duration:?UINT16LE, RA:6/bytes>>;
+    <<?UINT16LE(Duration), RA:6/bytes>>;
 
 % Acknowledgement (ACK)
 type(#ieee802_11_fc{type = 1,
         subtype = 16#D},
-    <<Duration:?UINT16LE, RA:6/bytes>>) ->
+    <<?UINT16LE(Duration), RA:6/bytes>>) ->
     {#ieee802_11_cf_ack{
             duration = Duration,
             ra = RA
     }, <<>>};
 type(#ieee802_11_fc{type = 1,
         subtype = 16#D},
-    <<Duration:?UINT16LE, RA:6/bytes, FCS:4/bytes>>) ->
+    <<?UINT16LE(Duration), RA:6/bytes, FCS:4/bytes>>) ->
     {#ieee802_11_cf_ack{
             duration = Duration,
             ra = RA
@@ -450,12 +450,12 @@ type(#ieee802_11_fc{type = 1,
             duration = Duration,
             ra = RA
         }) ->
-    <<Duration:?UINT16LE, RA:6/bytes>>;
+    <<?UINT16LE(Duration), RA:6/bytes>>;
 
 % Power save poll (PS)
 type(#ieee802_11_fc{type = 1,
         subtype = 16#A},
-    <<AID:?UINT16LE, BSSID:6/bytes, TA:6/bytes>>) ->
+    <<?UINT16LE(AID), BSSID:6/bytes, TA:6/bytes>>) ->
     {#ieee802_11_cf_ps{
             aid = AID,
             bssid = BSSID,
@@ -463,7 +463,7 @@ type(#ieee802_11_fc{type = 1,
         }, <<>>};
 type(#ieee802_11_fc{type = 1,
         subtype = 16#A},
-    <<AID:?UINT16LE, BSSID:6/bytes, TA:6/bytes, FCS:4/bytes>>) ->
+    <<?UINT16LE(AID), BSSID:6/bytes, TA:6/bytes, FCS:4/bytes>>) ->
     {#ieee802_11_cf_ps{
             aid = AID,
             bssid = BSSID,
@@ -476,12 +476,12 @@ type(#ieee802_11_fc{type = 1,
             bssid = BSSID,
             ta = TA
         }) ->
-    <<AID:?UINT16LE, BSSID:6/bytes, TA:6/bytes>>;
+    <<?UINT16LE(AID), BSSID:6/bytes, TA:6/bytes>>;
 
 % Contention free end; CF end + CF ACK
 type(#ieee802_11_fc{type = 1,
         subtype = Subtype},
-    <<Duration:?UINT16LE, RA:6/bytes, BSSID:6/bytes>>)
+    <<?UINT16LE(Duration), RA:6/bytes, BSSID:6/bytes>>)
     when Subtype == 16#E; Subtype == 16#F ->
     {#ieee802_11_cf_cfend{
             duration = Duration,
@@ -490,7 +490,7 @@ type(#ieee802_11_fc{type = 1,
         }, <<>>};
 type(#ieee802_11_fc{type = 1,
         subtype = Subtype},
-    <<Duration:?UINT16LE, RA:6/bytes, BSSID:6/bytes, FCS:4/bytes>>)
+    <<?UINT16LE(Duration), RA:6/bytes, BSSID:6/bytes, FCS:4/bytes>>)
     when Subtype == 16#E; Subtype == 16#F ->
     {#ieee802_11_cf_cfend{
             duration = Duration,
@@ -505,13 +505,13 @@ type(#ieee802_11_fc{type = 1,
             bssid = BSSID
         })
     when Subtype == 16#E; Subtype == 16#F ->
-    <<Duration:?UINT16LE, RA:6/bytes, BSSID:6/bytes>>;
+    <<?UINT16LE(Duration), RA:6/bytes, BSSID:6/bytes>>;
 
 % Block Ack Request (BlockAckReq)
 type(#ieee802_11_fc{type = 1,
         subtype = 8},
-    <<Duration:?UINT16LE, RA:6/bytes, TA:6/bytes,
-    BAR:?UINT16LE, SeqCtl:?UINT16LE>>) ->
+    <<?UINT16LE(Duration), RA:6/bytes, TA:6/bytes,
+    ?UINT16LE(BAR), ?UINT16LE(SeqCtl)>>) ->
     {#ieee802_11_cf_bar{
             duration = Duration,
             ra = RA,
@@ -521,8 +521,8 @@ type(#ieee802_11_fc{type = 1,
         }, <<>>};
 type(#ieee802_11_fc{type = 1,
         subtype = 8},
-    <<Duration:?UINT16LE, RA:6/bytes, TA:6/bytes,
-    BAR:?UINT16LE, SeqCtl:?UINT16LE, FCS:4/bytes>>) ->
+    <<?UINT16LE(Duration), RA:6/bytes, TA:6/bytes,
+    ?UINT16LE(BAR), ?UINT16LE(SeqCtl), FCS:4/bytes>>) ->
     {#ieee802_11_cf_bar{
             duration = Duration,
             ra = RA,
@@ -539,13 +539,13 @@ type(#ieee802_11_fc{type = 1,
             bar = {Reserved, TID},
             seq_ctl = {FragNum, SeqNum}
         }) ->
-    <<Duration:?UINT16LE, RA:6/bytes, TA:6/bytes,
+    <<?UINT16LE(Duration), RA:6/bytes, TA:6/bytes,
     TID:4, Reserved:12, SeqNum:12, FragNum:4>>;
 
 % Block Ack (BlockAck)
 type(#ieee802_11_fc{type = 1,
         subtype = 9},
-    <<Duration:?UINT16LE, BA:?UINT16LE, SeqCtl:?UINT16LE,
+    <<?UINT16LE(Duration), ?UINT16LE(BA), ?UINT16LE(SeqCtl),
     Bitmap:128/bytes>>) ->
     {#ieee802_11_cf_ba{
             duration = Duration,
@@ -555,7 +555,7 @@ type(#ieee802_11_fc{type = 1,
     }, <<>>};
 type(#ieee802_11_fc{type = 1,
         subtype = 9},
-    <<Duration:?UINT16LE, BA:?UINT16LE, SeqCtl:?UINT16LE,
+    <<?UINT16LE(Duration), ?UINT16LE(BA), ?UINT16LE(SeqCtl),
     Bitmap:128/bytes, FCS:4/bytes>>) ->
     {#ieee802_11_cf_ba{
             duration = Duration,
@@ -571,7 +571,7 @@ type(#ieee802_11_fc{type = 1,
             seq_ctl = {FragNum, SeqNum},
             bitmap = Bitmap
         }) ->
-    <<Duration:?UINT16LE, TID:4, Reserved:12, SeqNum:12,
+    <<?UINT16LE(Duration), TID:4, Reserved:12, SeqNum:12,
     FragNum:4, Bitmap:(128*8)>>;
 
 %%
@@ -579,7 +579,7 @@ type(#ieee802_11_fc{type = 1,
 %%
 type(#ieee802_11_fc{type = 2,
     to_ds = 0, from_ds = 0},
-    <<Duration:?UINT16LE, DA:6/bytes, SA:6/bytes, BSSID:6/bytes, Body/binary>>) ->
+    <<?UINT16LE(Duration), DA:6/bytes, SA:6/bytes, BSSID:6/bytes, Body/binary>>) ->
     {#ieee802_11_data{
             duration = Duration,
             da = DA,
@@ -598,12 +598,12 @@ type(#ieee802_11_fc{type = 2,
 
             body = Body
         }) ->
-    <<Duration:?UINT16LE, DA:6/bytes, SA:6/bytes, BSSID:6/bytes,
+    <<?UINT16LE(Duration), DA:6/bytes, SA:6/bytes, BSSID:6/bytes,
     (elements_to_bin(Body))/binary>>;
 
 type(#ieee802_11_fc{type = 2,
     to_ds = 0, from_ds = 1},
-    <<Duration:?UINT16LE, DA:6/bytes, BSSID:6/bytes, SA:6/bytes, Body/binary>>) ->
+    <<?UINT16LE(Duration), DA:6/bytes, BSSID:6/bytes, SA:6/bytes, Body/binary>>) ->
     {#ieee802_11_data{
             duration = Duration,
             da = DA,
@@ -622,12 +622,12 @@ type(#ieee802_11_fc{type = 2,
 
             body = Body
         }) ->
-    <<Duration:?UINT16LE, DA:6/bytes, BSSID:6/bytes, SA:6/bytes,
+    <<?UINT16LE(Duration), DA:6/bytes, BSSID:6/bytes, SA:6/bytes,
     (elements_to_bin(Body))/binary>>;
 
 type(#ieee802_11_fc{type = 2,
     to_ds = 1, from_ds = 0},
-    <<Duration:?UINT16LE, BSSID:6/bytes, SA:6/bytes, DA:6/bytes, Body/binary>>) ->
+    <<?UINT16LE(Duration), BSSID:6/bytes, SA:6/bytes, DA:6/bytes, Body/binary>>) ->
     {#ieee802_11_data{
             duration = Duration,
             da = DA,
@@ -646,12 +646,12 @@ type(#ieee802_11_fc{type = 2,
 
             body = Body
         }) ->
-    <<Duration:?UINT16LE, BSSID:6/bytes, SA:6/bytes, DA:6/bytes,
+    <<?UINT16LE(Duration), BSSID:6/bytes, SA:6/bytes, DA:6/bytes,
     (elements_to_bin(Body))/binary>>;
 
 type(#ieee802_11_fc{type = 2,
     to_ds = 1, from_ds = 1},
-    <<Duration:?UINT16LE, RA:6/bytes, TA:6/bytes, DA:6/bytes,
+    <<?UINT16LE(Duration), RA:6/bytes, TA:6/bytes, DA:6/bytes,
     SA:6/bytes, Body/binary>>) ->
     {#ieee802_11_data{
             duration = Duration,
@@ -673,7 +673,7 @@ type(#ieee802_11_fc{type = 2,
 
             body = Body
         }) ->
-    <<Duration:?UINT16LE, RA:6/bytes, TA:6/bytes, DA:6/bytes,
+    <<?UINT16LE(Duration), RA:6/bytes, TA:6/bytes, DA:6/bytes,
     SA:6/bytes, (elements_to_bin(Body))/binary>>;
 
 %%
@@ -824,17 +824,17 @@ management_body(<<FCS:4/bytes>>, Acc) ->
 management_body([], Acc) ->
     list_to_binary(lists:reverse(Acc));
 
-management_body(<<?E_FH, _Len, Dwell:?UINT16LE, HopSet, HopPattern,
+management_body(<<?E_FH, _Len, ?UINT16LE(Dwell), HopSet, HopPattern,
     HopIndex, Rest/binary>>, Acc) ->
     management_body(Rest, [{fh, Dwell, HopSet, HopPattern, HopIndex}|Acc]);
 management_body([{fh, Dwell, HopSet, HopPattern, HopIndex}|T], Acc) ->
-    management_body(T, [<<?E_FH, 5, Dwell:?UINT16LE, HopSet, HopPattern, HopIndex>>|Acc]);
+    management_body(T, [<<?E_FH, 5, ?UINT16LE(Dwell), HopSet, HopPattern, HopIndex>>|Acc]);
 
-management_body(<<?E_CF, _Len, Count, Period, MaxDuration:?UINT16LE,
-    DurationRemaining:?UINT16LE, Rest/binary>>, Acc) ->
+management_body(<<?E_CF, _Len, Count, Period, ?UINT16LE(MaxDuration),
+    ?UINT16LE(DurationRemaining), Rest/binary>>, Acc) ->
     management_body(Rest, [{cf, Count, Period, MaxDuration, DurationRemaining}|Acc]);
 management_body([{cf, Count, Period, MaxDuration, DurationRemaining}|T], Acc) ->
-    management_body(T, [<<?E_CF, 6, Count, Period, MaxDuration:?UINT16LE, DurationRemaining:?UINT16LE>>|Acc]);
+    management_body(T, [<<?E_CF, 6, Count, Period, ?UINT16LE(MaxDuration), ?UINT16LE(DurationRemaining)>>|Acc]);
 
 management_body(<<?E_TIM, Len, Count, Period, BitmapControl, Rest/binary>>, Acc) ->
     Size = Len-3,

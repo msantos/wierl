@@ -87,7 +87,7 @@ ap(Socket, Dev) ->
     {ok, Req, [Res]} = procket:alloc([
             <<Dev/bytes, 0:( (?IFNAMSIZ - byte_size(Dev))*8)>>,
             {ptr, 4096},
-            <<4096:?UINT16, 0:?UINT16>>
+            <<?UINT16(4096), ?UINT16(0)>>
         ]),
 
     Pointer = erlang:system_info({wordsize, external}) * 8,
@@ -99,7 +99,7 @@ ap(Socket, Dev) ->
     %   __u16 flags;
     % };
     case procket:ioctl(Socket, ?SIOCGIWSCAN, Req) of
-        {ok, <<_Ifname:16/bytes, _Ptr:Pointer, Len:?UINT16, _Flag:?UINT16>>} ->
+        {ok, <<_Ifname:16/bytes, _Ptr:Pointer, ?UINT16(Len), ?UINT16(_Flag)>>} ->
             Pad = (4096 - Len) * 8,
             {ok, <<Stream:Len/bytes, 0:Pad>>} = procket:buf(Res),
             event(Stream);
@@ -152,7 +152,7 @@ essid(Dev, ESSID) when is_binary(ESSID), byte_size(ESSID) < ?IW_ESSID_MAX_SIZE -
     {ok, Req, [_Res]} = procket:alloc([
         <<Dev/bytes, 0:( (?IFNAMSIZ - byte_size(Dev))*8)>>,
         {ptr, Struct},
-        <<(byte_size(Struct)):?UINT16, ?IW_SCAN_THIS_ESSID:?UINT16>>
+        <<?UINT16((byte_size(Struct))), ?UINT16(?IW_SCAN_THIS_ESSID)>>
     ]),
     Req.
 
@@ -174,7 +174,7 @@ event(Buf) ->
 % }
 event(<<>>, #state{aps = APs}) ->
     [ {AP, orddict:to_list(N)} || {AP, N} <- gb_trees:to_list(APs) ];
-event(<<EventLen:?UINT16, Cmd:?UINT16, Buf/binary>>, #state{ap = AP, aps = APs}) ->
+event(<<?UINT16(EventLen), ?UINT16(Cmd), Buf/binary>>, #state{ap = AP, aps = APs}) ->
     Pad = procket:wordalign(2+2) * 8,
     Len = EventLen - 4 - Pad div 8,
     <<0:Pad, Event:Len/bytes, Rest/binary>> = Buf,

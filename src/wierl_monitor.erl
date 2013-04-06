@@ -172,10 +172,10 @@ handle_call({controlling_process, Pid}, {Owner,_}, #state{pid = Owner} = State) 
 handle_call({read, Size}, _From, #state{socket = Socket} = State) ->
     case procket:recvfrom(Socket, Size, 0, ?SIZEOF_STRUCT_SOCKADDR_LL) of
         {ok, Buf, <<
-            _Family:?UINT16,
-            _Protocol:?UINT16,
-            _Ifindex:?UINT32,
-            Hatype:?UINT16,
+            ?UINT16(_Family),
+            ?UINT16(_Protocol),
+            ?UINT32(_Ifindex),
+            ?UINT16(Hatype),
             _/binary
             >>} ->
             {reply, {ok, Buf}, State#state{dlt = dlt(Hatype)}};
@@ -252,10 +252,10 @@ datalinktype(Socket) ->
             timer:sleep(10),
             datalinktype(Socket);
         {ok, <<>>, <<
-            _Family:?UINT16,
-            _Protocol:?UINT16,
-            _Ifindex:?UINT32,
-            Hatype:?UINT16,
+            ?UINT16(_Family),
+            ?UINT16(_Protocol),
+            ?UINT32(_Ifindex),
+            ?UINT16(Hatype),
             _/binary
             >>} ->
             {ok, dlt(Hatype)};
