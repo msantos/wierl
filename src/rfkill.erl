@@ -1,4 +1,4 @@
-%% Copyright (c) 2011-2015, Michael Santos <michael.santos@gmail.com>
+%% Copyright (c) 2011-2016, Michael Santos <michael.santos@gmail.com>
 %% All rights reserved.
 %%
 %% Redistribution and use in source and binary forms, with or without
@@ -72,26 +72,33 @@ event(<<?UINT32(Idx),
 list() ->
     case procket:dev("rfkill") of
         {ok, FD} ->
-            Res = list_1(FD),
-            ok = procket:close(FD),
-            Res;
-        Error ->
-            Error
-    end.
-
-list_1(FD) ->
-    {ok, Data} = procket:read(FD, 8),
-
-    case event(Data) of
-        #rfkill_event{op = ?RFKILL_OP_ADD} = Event ->
-            Event;
-        {error, eagain} ->
-            timer:sleep(10),
             list_1(FD);
         Error ->
             Error
     end.
 
+list_1(FD) ->
+    {ok, Data} = read(FD, 8),
+
+    case event(Data) of
+        #rfkill_event{op = ?RFKILL_OP_ADD} = Event ->
+            [Event];
+        _ ->
+            []
+    end.
+
+read(FD, Size) ->
+    case procket:read(FD, 8) of
+        {ok, Data} ->
+            ok = procket:close(FD),
+            {ok, Data};
+        {error, eagain} ->
+            timer:sleep(10),
+            read(FD, Size);
+        Error ->
+            ok = procket:close(FD),
+            Error
+    end.
 
 write(Event) when is_binary(Event) ->
     case procket:dev("rfkill") of
