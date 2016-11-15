@@ -1,23 +1,19 @@
+REBAR ?= rebar3
 
-REBAR=$(shell which rebar || echo ./rebar)
-
-all: dirs deps compile
-
-./rebar:
-	erl -noshell -s inets start \
-		-eval 'httpc:request(get, {"https://raw.github.com/wiki/rebar/rebar/rebar", []}, [], [{stream, "./rebar"}])' \
-		-s inets stop -s init stop
-	chmod +x ./rebar
+all: dirs compile
 
 dirs:
 	@mkdir -p priv/tmp
 
-compile: $(REBAR)
+compile:
 	@$(REBAR) compile
 
-clean: $(REBAR)
+clean:
 	@$(REBAR) clean
 
-deps: $(REBAR)
-	@$(REBAR) check-deps || $(REBAR) get-deps
+dialyzer:
+	@$(REBAR) dialyzer
 
+typer:
+	@typer -pa _build/default/lib/wierl/ebin -I include \
+		--plt _build/default/*_plt -r ./src
