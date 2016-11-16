@@ -1,4 +1,4 @@
-%% Copyright (c) 2011-2015, Michael Santos <michael.santos@gmail.com>
+%% Copyright (c) 2011-2016, Michael Santos <michael.santos@gmail.com>
 %% All rights reserved.
 %%
 %% Redistribution and use in source and binary forms, with or without
@@ -233,10 +233,7 @@ wireless_mode(Ifname, Mode) ->
 
 dlt(802) -> wierl_prism;
 dlt(803) -> wierl_radiotap;
-dlt(N) when is_integer(N) -> {unsupported, N};
-
-dlt(wierl_prism) -> 802;
-dlt(wierl_radiotap) -> 803.
+dlt(N) when is_integer(N) -> {unsupported, N}.
 
 % Get the datalink type of the interface by reading 0 bytes
 % from the socket. The interface may not be ready, so spin
