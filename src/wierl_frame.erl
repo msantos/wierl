@@ -1,4 +1,4 @@
-%% Copyright (c) 2011-2015, Michael Santos <michael.santos@gmail.com>
+%% Copyright (c) 2011-2016, Michael Santos <michael.santos@gmail.com>
 %% All rights reserved.
 %%
 %% Redistribution and use in source and binary forms, with or without
@@ -35,7 +35,9 @@
 -module(wierl_frame).
 -export([
         control/1, type/2,
-        field/2
+        field/2,
+
+        management_body/1
     ]).
 
 -include("wierl.hrl").
