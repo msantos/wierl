@@ -43,7 +43,9 @@
         read/1, read/2,
         write/2,
 
-        mode/2, controlling_process/2
+        mode/2, controlling_process/2,
+
+        dlt/1
     ]).
 -export([start_link/2]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
@@ -233,7 +235,10 @@ wireless_mode(Ifname, Mode) ->
 
 dlt(802) -> wierl_prism;
 dlt(803) -> wierl_radiotap;
-dlt(N) when is_integer(N) -> {unsupported, N}.
+dlt(N) when is_integer(N) -> {unsupported, N};
+
+dlt(wierl_prism) -> 802;
+dlt(wierl_radiotap) -> 803.
 
 % Get the datalink type of the interface by reading 0 bytes
 % from the socket. The interface may not be ready, so spin
