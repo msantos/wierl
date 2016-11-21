@@ -1,3 +1,5 @@
+.PHONY: all dirs compile clean dialyzer typer
+
 REBAR ?= rebar3
 
 all: dirs compile
