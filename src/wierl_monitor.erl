@@ -1,4 +1,4 @@
-%% Copyright (c) 2011-2016, Michael Santos <michael.santos@gmail.com>
+%% Copyright (c) 2011-2021, Michael Santos <michael.santos@gmail.com>
 %% All rights reserved.
 %%
 %% Redistribution and use in source and binary forms, with or without
@@ -36,20 +36,27 @@
 -behaviour(gen_server).
 
 -export([
-        open/1, open/2,
-        close/1,
-        frame/2,
+    open/1, open/2,
+    close/1,
+    frame/2,
 
-        read/1, read/2,
-        write/2,
+    read/1, read/2,
+    write/2,
 
-        mode/2, controlling_process/2,
+    mode/2,
+    controlling_process/2,
 
-        dlt/1
-    ]).
+    dlt/1
+]).
 -export([start_link/2]).
--export([init/1, handle_call/3, handle_cast/2, handle_info/2,
-        terminate/2, code_change/3]).
+-export([
+    init/1,
+    handle_call/3,
+    handle_cast/2,
+    handle_info/2,
+    terminate/2,
+    code_change/3
+]).
 
 -include("wierl.hrl").
 -include("wierl_frame.hrl").
@@ -59,15 +66,16 @@
 -define(SIZEOF_STRUCT_SOCKADDR_LL, 20).
 
 -record(state, {
-        port,
-        pid,
-        socket,
-        ifname,
-        ifindex,
-        dlt,            % radio header format
-        fcs = false     % FCS is present in frame
-    }).
-
+    port,
+    pid,
+    socket,
+    ifname,
+    ifindex,
+    % radio header format
+    dlt,
+    % FCS is present in frame
+    fcs = false
+}).
 
 %%--------------------------------------------------------------------
 %%% Exports
@@ -90,14 +98,16 @@ write(Ref, Frame) ->
 
 % Encode a complete frame
 frame(Ref, {Header, #ieee802_11_fc{} = FC, FB}) when is_tuple(FB) ->
-    try frame_encode(Ref, {Header, FC, FB})
+    try
+        frame_encode(Ref, {Header, FC, FB})
     catch
         error:_ ->
             {error, bad_frame}
     end;
 % Decode a complete frame
 frame(Ref, Frame) when is_binary(Frame) ->
-    try frame_decode(Ref, Frame)
+    try
+        frame_decode(Ref, Frame)
     catch
         error:_ ->
             {error, bad_frame}
@@ -107,18 +117,15 @@ mode(Ref, Mode) when is_atom(Mode) ->
     Ifname = gen_server:call(Ref, ifname),
     wireless_mode(Ifname, Mode).
 
-
 % FIXME: race condition: events can be delivered out of order
 controlling_process(Ref, Pid) when is_pid(Ref), is_pid(Pid) ->
     flush_events(Ref, Pid),
     gen_server:call(Ref, {controlling_process, Pid}),
     flush_events(Ref, Pid).
 
-
 start_link(Ifname, Flags) when byte_size(Ifname) < ?IFNAMSIZ, is_list(Flags) ->
     Pid = self(),
     gen_server:start_link(?MODULE, [Pid, Ifname, Flags], [{timeout, 5000}]).
-
 
 %%--------------------------------------------------------------------
 %%% Callbacks
@@ -140,10 +147,11 @@ init([Pid, Ifname, Flags]) ->
         {ok, DLT} ->
             Active = proplists:get_value(active, Flags, false),
 
-            Port = case Active of
-                true -> set_active(Socket);
-                false -> false
-            end,
+            Port =
+                case Active of
+                    true -> set_active(Socket);
+                    false -> false
+                end,
 
             {ok, #state{
                 dlt = DLT,
@@ -159,7 +167,6 @@ init([Pid, Ifname, Flags]) ->
             {stop, Error}
     end.
 
-
 handle_call(dlt, _From, #state{dlt = DLT} = State) ->
     {reply, DLT, State};
 handle_call(fcs, _From, #state{fcs = FCS} = State) ->
@@ -168,9 +175,8 @@ handle_call({fcs, FCS}, _From, State) ->
     {reply, ok, State#state{fcs = FCS}};
 handle_call(ifname, _From, #state{ifname = Ifname} = State) ->
     {reply, Ifname, State};
-handle_call({controlling_process, Pid}, {Owner,_}, #state{pid = Owner} = State) ->
+handle_call({controlling_process, Pid}, {Owner, _}, #state{pid = Owner} = State) ->
     {reply, ok, State#state{pid = Pid}};
-
 handle_call({read, Size}, _From, #state{socket = Socket} = State) ->
     case procket:recvfrom(Socket, Size, 0, ?SIZEOF_STRUCT_SOCKADDR_LL) of
         {ok, Buf, <<
@@ -179,7 +185,7 @@ handle_call({read, Size}, _From, #state{socket = Socket} = State) ->
             ?UINT32(_Ifindex),
             ?UINT16(Hatype),
             _/binary
-            >>} ->
+        >>} ->
             {reply, {ok, Buf}, State#state{dlt = dlt(Hatype)}};
         {error, _} = Error ->
             {reply, Error, State};
@@ -195,12 +201,10 @@ handle_call(close, _From, State) ->
 handle_cast(_Msg, State) ->
     {noreply, State}.
 
-
 %% {active, true} mode
 handle_info({Port, {data, Data}}, #state{port = Port, pid = Pid} = State) ->
     Pid ! {wierl_monitor, self(), Data},
     {noreply, State};
-
 % WTF?
 handle_info(Info, State) ->
     error_logger:error_report([wtf, Info]),
@@ -224,7 +228,7 @@ code_change(_OldVsn, State, _Extra) ->
 wireless_mode(Ifname, Mode) ->
     N = wierl:mode(Mode),
     case wierl_config:param(Ifname, {mode, N}) of
-        {ok, <<N, 0:(15*8)>>} ->
+        {ok, <<N, 0:(15 * 8)>>} ->
             ok;
         {error, enetdown} ->
             ok = wierl_config:up(Ifname),
@@ -236,7 +240,6 @@ wireless_mode(Ifname, Mode) ->
 dlt(802) -> wierl_prism;
 dlt(803) -> wierl_radiotap;
 dlt(N) when is_integer(N) -> {unsupported, N};
-
 dlt(wierl_prism) -> 802;
 dlt(wierl_radiotap) -> 803.
 
@@ -250,7 +253,7 @@ dlt(wierl_radiotap) -> 803.
 % (more reliable) reboot.
 datalinktype(Socket) ->
     case procket:recvfrom(Socket, 0, 0, ?SIZEOF_STRUCT_SOCKADDR_LL) of
-        {error,eagain} ->
+        {error, eagain} ->
             timer:sleep(10),
             datalinktype(Socket);
         {ok, <<>>, <<
@@ -259,24 +262,24 @@ datalinktype(Socket) ->
             ?UINT32(_Ifindex),
             ?UINT16(Hatype),
             _/binary
-            >>} ->
+        >>} ->
             {ok, dlt(Hatype)};
         {error, _} = Error ->
             Error
     end.
 
-
 frame_encode(_Ref, {Header, FC, FB}) ->
-    Type = case element(1, Header) of
-        ieee802_11_radiotap -> wierl_radiotap;
-        ieee802_11_prism -> wierl_prism
-    end,
+    Type =
+        case element(1, Header) of
+            ieee802_11_radiotap -> wierl_radiotap;
+            ieee802_11_prism -> wierl_prism
+        end,
 
     list_to_binary([
-            Type:header(Header),
-            wierl_frame:control(FC),
-            wierl_frame:type(FC, FB)
-        ]).
+        Type:header(Header),
+        wierl_frame:control(FC),
+        wierl_frame:type(FC, FB)
+    ]).
 
 frame_decode(Ref, Frame) ->
     Type = gen_server:call(Ref, dlt),
@@ -291,35 +294,35 @@ frame_decode(Ref, Frame) ->
     % XXX check the FCS is correct
     {FB, FCS} = wierl_frame:type(FC, Data2),
 
-    {FB1, FCS1} = case FCS of
-        <<>> ->
-            % Driver does not provide FCS or frame type
-            % does not use FCS
-            {FB, 0};
-        <<N:4/unsigned-integer-unit:8>> ->
-            % Driver provides FCS
-            % XXX flag is set in state on EVERY frame
-            ok = gen_server:call(Ref, {fcs, true}),
-            {FB, N};
-        false ->
-            % Ambiguous frame type, check our state if
-            % FCS is provided
-            Include = gen_server:call(Ref, fcs),
+    {FB1, FCS1} =
+        case FCS of
+            <<>> ->
+                % Driver does not provide FCS or frame type
+                % does not use FCS
+                {FB, 0};
+            <<N:4/unsigned-integer-unit:8>> ->
+                % Driver provides FCS
+                % XXX flag is set in state on EVERY frame
+                ok = gen_server:call(Ref, {fcs, true}),
+                {FB, N};
+            false ->
+                % Ambiguous frame type, check our state if
+                % FCS is provided
+                Include = gen_server:call(Ref, fcs),
 
-            case Include of
-                true ->
-                    % Remove 4 bytes from the frame body and re-parse the frame
-                    Len = byte_size(Data2) - 4,
-                    <<Body:Len/bytes, RealFCS:4/unsigned-integer-unit:8>> = Data2,
-                    {FrameBody, _} = wierl_frame:type(FC, Body),
-                    {FrameBody, RealFCS};
-                false ->
-                    {FB, 0}
-            end
-    end,
+                case Include of
+                    true ->
+                        % Remove 4 bytes from the frame body and re-parse the frame
+                        Len = byte_size(Data2) - 4,
+                        <<Body:Len/bytes, RealFCS:4/unsigned-integer-unit:8>> = Data2,
+                        {FrameBody, _} = wierl_frame:type(FC, Body),
+                        {FrameBody, RealFCS};
+                    false ->
+                        {FB, 0}
+                end
+        end,
 
     {Radio, FC, FB1, FCS1}.
-
 
 %% active mode
 set_active(FD) ->
@@ -330,6 +333,5 @@ flush_events(Ref, Pid) ->
         {wierl_monitor, Ref, _} = Event ->
             Pid ! Event,
             flush_events(Ref, Pid)
-    after
-        0 -> ok
+    after 0 -> ok
     end.

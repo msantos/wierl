@@ -1,4 +1,4 @@
-%% Copyright (c) 2011-2015, Michael Santos <michael.santos@gmail.com>
+%% Copyright (c) 2011-2021, Michael Santos <michael.santos@gmail.com>
 %% All rights reserved.
 %%
 %% Redistribution and use in source and binary forms, with or without
@@ -30,10 +30,12 @@
 %% POSSIBILITY OF SUCH DAMAGE.
 -module(wierl_config).
 -export([
-        param/1, param/2, param/3,
-        open/0, close/1,
-        up/1, down/1
-    ]).
+    param/1, param/2, param/3,
+    open/0,
+    close/1,
+    up/1,
+    down/1
+]).
 
 -include("wierl.hrl").
 
@@ -43,12 +45,10 @@
 -define(SIOCGIFFLAGS, 16#8913).
 -define(SIOCSIFFLAGS, 16#8914).
 
-
 open() ->
     procket:socket(inet, dgram, 0).
 close(Socket) ->
     procket:close(Socket).
-
 
 %%
 %% Retrieve all wireless parameters
@@ -56,14 +56,27 @@ close(Socket) ->
 param(Dev) when is_binary(Dev) ->
     {ok, Socket} = open(),
 
-    Attr = case ioctl(Socket, Dev, ?SIOCGIWNAME) of
-        {ok, <<>>} ->
-            {error, enotsup};
-        Name ->
-            [{name, Name}] ++
-            [ {N, param(Socket, Dev, N)} || N <-
-                [nwid, freq, mode, essid,
-                    encode, range, ap, rate, power] ]
+    Attr =
+        case ioctl(Socket, Dev, ?SIOCGIWNAME) of
+            {ok, <<>>} ->
+                {error, enotsup};
+            Name ->
+                [{name, Name}] ++
+                    [
+                        {N, param(Socket, Dev, N)}
+                     || N <-
+                            [
+                                nwid,
+                                freq,
+                                mode,
+                                essid,
+                                encode,
+                                range,
+                                ap,
+                                rate,
+                                power
+                            ]
+                    ]
         end,
     close(Socket),
     Attr.
@@ -78,7 +91,7 @@ param(Dev, Param) when is_binary(Dev) ->
 %% Retreive wireless setting
 %%
 param(Socket, Dev, essid) ->
-    ioctl_point(Socket, Dev, ?SIOCGIWESSID, ?IW_ESSID_MAX_SIZE+2);
+    ioctl_point(Socket, Dev, ?SIOCGIWESSID, ?IW_ESSID_MAX_SIZE + 2);
 param(Socket, Dev, encode) ->
     ioctl_point(Socket, Dev, ?SIOCGIWENCODE, ?IW_ENCODING_TOKEN_MAX);
 param(Socket, Dev, range) ->
@@ -86,12 +99,11 @@ param(Socket, Dev, range) ->
     ioctl_point(Socket, Dev, ?SIOCGIWRANGE, 1024);
 param(Socket, Dev, Key) when is_atom(Key) ->
     ioctl(Socket, Dev, req(Key));
-
 %%
 %% Change wireless setting
 %%
 param(Socket, Dev, {Key, Val}) when is_atom(Key), is_integer(Val) ->
-    Struct = <<?UINT32(Val), 0:(12*8)>>,
+    Struct = <<?UINT32(Val), 0:(12 * 8)>>,
     ioctl(Socket, Dev, set(Key), Struct);
 param(Socket, Dev, {essid, Val}) when is_binary(Val) ->
     ioctl_point(Socket, Dev, set(essid), Val, 1);
@@ -99,10 +111,8 @@ param(Socket, Dev, {Key, Val}) when is_atom(Key), is_binary(Val) ->
     ioctl_point(Socket, Dev, set(Key), Val);
 param(Socket, Dev, {Key, Val, Flag}) when is_atom(Key), is_binary(Val) ->
     ioctl_point(Socket, Dev, set(Key), Val, Flag);
-
 param(_Socket, _Dev, {_Key, _Value}) ->
     {error, unsupported}.
-
 
 %%
 %% ioctl
@@ -110,7 +120,7 @@ param(_Socket, _Dev, {_Key, _Value}) ->
 
 %% null buffer
 ioctl(Socket, Dev, Req) ->
-    ioctl(Socket, Dev, Req, <<0:(16*8)>>).
+    ioctl(Socket, Dev, Req, <<0:(16 * 8)>>).
 
 ioctl(Socket, Dev, Req, Buf) ->
     Len = byte_size(Dev),
@@ -127,7 +137,6 @@ ioctl(Socket, Dev, Req, Buf) ->
             Error
     end.
 
-
 %%
 %% ioctl using an iw_point structure
 %%
@@ -135,19 +144,20 @@ ioctl_point(Socket, Dev, Req, Alloc) ->
     ioctl_point(Socket, Dev, Req, Alloc, 0).
 
 ioctl_point(Socket, Dev, Req, Alloc, Flags) ->
-    ReqLen = if
-        is_binary(Alloc) -> byte_size(Alloc);
-        is_integer(Alloc) -> Alloc
-    end,
+    ReqLen =
+        if
+            is_binary(Alloc) -> byte_size(Alloc);
+            is_integer(Alloc) -> Alloc
+        end,
 
     Len = byte_size(Dev),
     Bits = (?IFNAMSIZ - Len - 1) * 8,
 
     {ok, Struct, [Res]} = procket:alloc([
-            <<Dev/bytes, 0:Bits, 0>>,
-            {ptr, Alloc},
-            <<?UINT16(ReqLen), ?UINT16(Flags)>>
-        ]),
+        <<Dev/bytes, 0:Bits, 0>>,
+        {ptr, Alloc},
+        <<?UINT16(ReqLen), ?UINT16(Flags)>>
+    ]),
 
     Pointer = erlang:system_info({wordsize, external}) * 8,
 
@@ -175,29 +185,34 @@ down(Dev) when byte_size(Dev) < ?IFNAMSIZ ->
     {ok, Socket} = open(),
 
     {ok, Flags} = get_flag(Socket, Dev),
-    ok = set_flag(Socket, Dev, Flags band bnot(?IFF_UP)),
+    ok = set_flag(Socket, Dev, Flags band bnot (?IFF_UP)),
 
     ok = close(Socket),
     ok.
 
 set_flag(FD, Dev, Flag) ->
-    Res = procket:ioctl(FD, ?SIOCSIFFLAGS,
-        <<Dev/bytes, 0:((15-byte_size(Dev))*8), 0:8, ?UINT16(Flag), 0:(14*8)>>),
+    Res = procket:ioctl(
+        FD,
+        ?SIOCSIFFLAGS,
+        <<Dev/bytes, 0:((15 - byte_size(Dev)) * 8), 0:8, ?UINT16(Flag), 0:(14 * 8)>>
+    ),
     case Res of
         {ok, _} -> ok;
         Error -> Error
     end.
 
 get_flag(FD, Dev) ->
-    Res = procket:ioctl(FD, ?SIOCGIFFLAGS,
-        <<Dev/bytes, 0:((15-byte_size(Dev))*8), 0:(16*8)>>),
+    Res = procket:ioctl(
+        FD,
+        ?SIOCGIFFLAGS,
+        <<Dev/bytes, 0:((15 - byte_size(Dev)) * 8), 0:(16 * 8)>>
+    ),
     case Res of
-        {ok, <<_:(16*8), ?UINT16(Flag), _/binary>>} ->
+        {ok, <<_:(16 * 8), ?UINT16(Flag), _/binary>>} ->
             {ok, Flag};
         Error ->
             Error
     end.
-
 
 req(nwid) -> ?SIOCGIWNWID;
 req(freq) -> ?SIOCGIWFREQ;

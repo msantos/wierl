@@ -1,4 +1,4 @@
-%% Copyright (c) 2011-2015, Michael Santos <michael.santos@gmail.com>
+%% Copyright (c) 2011-2021, Michael Santos <michael.santos@gmail.com>
 %% All rights reserved.
 %%
 %% Redistribution and use in source and binary forms, with or without
@@ -30,14 +30,13 @@
 %% POSSIBILITY OF SUCH DAMAGE.
 -module(wierl).
 -export([
-        format/1,
-        decode/1,
-        cmd/1,
-        mode/1
-    ]).
+    format/1,
+    decode/1,
+    cmd/1,
+    mode/1
+]).
 
 -include("wierl.hrl").
-
 
 % Convert the integer command values to almost human readable atoms
 cmd(?SIOCGIWNAME) -> name;
@@ -77,7 +76,6 @@ mode(?IW_MODE_MASTER) -> master;
 mode(?IW_MODE_REPEAT) -> repeat;
 mode(?IW_MODE_SECOND) -> second;
 mode(?IW_MODE_MONITOR) -> monitor;
-
 mode(auto) -> ?IW_MODE_AUTO;
 mode(adhoc) -> ?IW_MODE_ADHOC;
 mode(infra) -> ?IW_MODE_INFRA;
@@ -91,64 +89,60 @@ qual(<<Qual:8, Level:8/signed, Noise:8, Updated:8>>) ->
 
 % Pretty print the scan list
 format(Info) when is_list(Info) ->
-    [ {decode({bssid, N}), param(L)} || {N,L} <- Info ].
+    [{decode({bssid, N}), param(L)} || {N, L} <- Info].
 
 param(Param) ->
-    [ decode(N) || N <- Param ].
+    [decode(N) || N <- Param].
 
 decode({Key, List}) when is_list(List) ->
-    {Key, [ decode({Key, N}) || N <- List ]};
-
+    {Key, [decode({Key, N}) || N <- List]};
 decode({essid, <<?UINT16(Len), ?UINT16(_Cmd), Rest/binary>>}) ->
-    Pad = procket:wordalign(2+2) * 8,
+    Pad = procket:wordalign(2 + 2) * 8,
     <<0:Pad, ESSID:Len/bytes>> = Rest,
     {essid, ESSID};
-
 % struct sockadddr
-decode({bssid, <<
-        ?UINT16(?ARPHRD_ETHER), % sa_family_t
-        Bytes:6/bytes, 0:64     % sa_data: 14 bytes
-        >>}) ->
-    {bssid, lists:flatten(string:join([ io_lib:format("~.16b", [N]) || <<N:8>> <= Bytes ], ":"))};
-
+decode(
+    {bssid, <<
+        % sa_family_t
+        ?UINT16(?ARPHRD_ETHER),
+        % sa_data: 14 bytes
+        Bytes:6/bytes,
+        0:64
+    >>}
+) ->
+    {bssid, lists:flatten(string:join([io_lib:format("~.16b", [N]) || <<N:8>> <= Bytes], ":"))};
 decode({ap, AP}) ->
     decode({bssid, AP});
-
 decode({mode, <<?UINT32(Mode)>>}) ->
     {mode, mode(Mode)};
-
 decode({qual, Qual}) ->
     {qual, qual(Qual)};
-
 decode({updated, Status}) when Status band ?IW_QUAL_QUAL_UPDATED == 1 ->
     {updated, true};
 decode({updated, _Status}) ->
     {updated, false};
-
 decode({freq, <<?UINT64(Channel), _/binary>>}) when Channel < 1000 ->
     {channel, Channel};
 decode({freq, <<?INT32(M), ?INT16(E), _I:8, _Flags:8, _/binary>>}) ->
-    {frequency, M*math:pow(10, E)};
-
+    {frequency, M * math:pow(10, E)};
 decode({power, Power}) ->
     {power, decode({param, Power})};
-
 decode({param, <<?INT32(Value), Fixed:8, Disabled:8, ?UINT32(Flags), _/binary>>}) ->
     [{value, Value}, {fixed, Fixed}, {disabled, Disabled}, {flags, Flags}];
-
-decode({range, <<
+decode(
+    {range, <<
         ?UINT32(Throughput),
         ?UINT32(Min_nwid),
         ?UINT32(Max_nwid),
         ?UINT16(Old_num_channels),
         Old_num_frequency:8,
         Scan_capa:8,
-        Event_capa:(6*4)/bytes,
+        Event_capa:(6 * 4)/bytes,
         ?INT32(Sensitivity),
         Max_qual:4/bytes,
         Avg_qual:4/bytes,
         Num_bitrates:8,
-        Bitrate:(?IW_MAX_BITRATES*4)/bytes,
+        Bitrate:(?IW_MAX_BITRATES * 4)/bytes,
         ?INT32(Min_rts),
         ?INT32(Max_rts),
         ?INT32(Min_frag),
@@ -160,13 +154,13 @@ decode({range, <<
         ?UINT16(Pmp_flags),
         ?UINT16(Pmt_flags),
         ?UINT16(Pm_capa),
-        Encoding_size:(?IW_MAX_ENCODING_SIZES*2)/bytes,
+        Encoding_size:(?IW_MAX_ENCODING_SIZES * 2)/bytes,
         Num_encoding_sizes:8,
         Max_encoding_tokens:8,
         Encoding_login_index:8,
         ?UINT16(Txpower_capa),
         Num_txpower:8,
-        Txpower:(?IW_MAX_TXPOWER*4)/bytes,
+        Txpower:(?IW_MAX_TXPOWER * 4)/bytes,
         We_version_compiled:8,
         We_version_source:8,
         ?UINT16(Retry_capa),
@@ -178,15 +172,16 @@ decode({range, <<
         ?INT32(Max_r_time),
         ?UINT16(Num_channels),
         Num_frequency:8,
-        Freq:(?IW_MAX_FREQUENCIES*8)/bytes,
+        Freq:(?IW_MAX_FREQUENCIES * 8)/bytes,
         ?UINT32(Enc_capa),
         ?INT32(Min_pms),
         ?INT32(Max_pms),
-%        ?UINT16(Pms_flags),
-%        ?INT32(Modul_capa),
-%        ?UINT32(Bitrate_capa:?UINT32)
+        %        ?UINT16(Pms_flags),
+        %        ?INT32(Modul_capa),
+        %        ?UINT32(Bitrate_capa:?UINT32)
         _/binary
-        >>}) ->
+    >>}
+) ->
     {range, [
         {throughput, Throughput},
         {min_nwid, Min_nwid},
@@ -233,11 +228,10 @@ decode({range, <<
         {enc_capa, Enc_capa},
         {min_pms, Min_pms},
         {max_pms, Max_pms}
-%        {max_pms, Max_pms},
-%        {pms_flags, Pms_flags},
-%        {modul_capa, Modul_capa},
-%        {bitrate_capa, Bitrate_capa}
+        %        {max_pms, Max_pms},
+        %        {pms_flags, Pms_flags},
+        %        {modul_capa, Modul_capa},
+        %        {bitrate_capa, Bitrate_capa}
     ]};
-
-decode({_Key,_Val} = Unknown) ->
+decode({_Key, _Val} = Unknown) ->
     Unknown.

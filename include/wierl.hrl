@@ -1,4 +1,4 @@
-%% Copyright (c) 2011-2015, Michael Santos <michael.santos@gmail.com>
+%% Copyright (c) 2011-2021, Michael Santos <michael.santos@gmail.com>
 %% All rights reserved.
 %%
 %% Redistribution and use in source and binary forms, with or without
@@ -29,23 +29,25 @@
 %% ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 %% POSSIBILITY OF SUCH DAMAGE.
 
--define(UINT16(N), N:2/native-unsigned-integer-unit:8).
--define(UINT32(N), N:4/native-unsigned-integer-unit:8).
--define(UINT64(N), N:8/native-unsigned-integer-unit:8).
+-define(UINT16(N), N:2 / native - unsigned - integer - unit:8).
+-define(UINT32(N), N:4 / native - unsigned - integer - unit:8).
+-define(UINT64(N), N:8 / native - unsigned - integer - unit:8).
 
--define(UINT16LE(N), N:2/little-unsigned-integer-unit:8).
--define(UINT32LE(N), N:4/little-unsigned-integer-unit:8).
--define(UINT64LE(N), N:8/little-unsigned-integer-unit:8).
+-define(UINT16LE(N), N:2 / little - unsigned - integer - unit:8).
+-define(UINT32LE(N), N:4 / little - unsigned - integer - unit:8).
+-define(UINT64LE(N), N:8 / little - unsigned - integer - unit:8).
 
--define(INT16(N), N:2/native-signed-integer-unit:8).
--define(INT32(N), N:4/native-signed-integer-unit:8).
+-define(INT16(N), N:2 / native - signed - integer - unit:8).
+-define(INT32(N), N:4 / native - signed - integer - unit:8).
 
--define(INT16LE(N), N:2/little-signed-integer-unit:8).
--define(INT32LE(N), N:4/little-signed-integer-unit:8).
+-define(INT16LE(N), N:2 / little - signed - integer - unit:8).
+-define(INT32LE(N), N:4 / little - signed - integer - unit:8).
 
 -define(IFNAMSIZ, 16).
--define(SIOCSIWSCAN, 16#8B18).  % Trigger a scan
--define(SIOCGIWSCAN, 16#8B19).  % Retrieve the scan results
+% Trigger a scan
+-define(SIOCSIWSCAN, 16#8B18).
+% Retrieve the scan results
+-define(SIOCGIWSCAN, 16#8B19).
 
 -define(IW_MAX_BITRATES, 32).
 -define(IW_MAX_ENCODING_SIZES, 8).
@@ -57,7 +59,6 @@
 -define(IW_ESSID_MAX_SIZE, 32).
 -define(IW_MAX_FREQUENCIES, 32).
 -define(IW_SCAN_THIS_ESSID, 16#0002).
-
 
 -define(IW_POWER_ON, 16#0000).
 -define(IW_POWER_TYPE, 16#F000).

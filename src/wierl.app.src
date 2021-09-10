@@ -1,5 +1,5 @@
-{application, wierl,
-    [{description, "Erlang interface for manipulating 802.11 devices"},
+{application, wierl, [
+    {description, "Erlang interface for manipulating 802.11 devices"},
     {vsn, "0.2.0"},
     {registered, []},
     {applications, [kernel, stdlib]},

@@ -1,4 +1,4 @@
-%% Copyright (c) 2011-2016, Michael Santos <michael.santos@gmail.com>
+%% Copyright (c) 2011-2021, Michael Santos <michael.santos@gmail.com>
 %% All rights reserved.
 %%
 %% Redistribution and use in source and binary forms, with or without
@@ -30,37 +30,43 @@
 %% POSSIBILITY OF SUCH DAMAGE.
 -module(rfkill).
 -export([
-        block/0, unblock/0,
-        list/0,
+    block/0,
+    unblock/0,
+    list/0,
 
-        decode/1, state/1, type/1, op/1
-    ]).
+    decode/1,
+    state/1,
+    type/1,
+    op/1
+]).
 
 -include("wierl.hrl").
 -include("rfkill.hrl").
-
 
 block() ->
     write(block(on)).
 unblock() ->
     write(block(off)).
 
-block(on) -> block(?BLOCK);
-block(off) -> block(?UNBLOCK);
-
+block(on) ->
+    block(?BLOCK);
+block(off) ->
+    block(?UNBLOCK);
 block(Block) when is_integer(Block) ->
-    <<?UINT32(0),                            % idx
-    0:8,                                    % type
-    ?RFKILL_OP_CHANGE_ALL:8,                % op
-    Block:8,                                % soft
-    0:8                                     % hard
+    % idx
+    <<
+        ?UINT32(0),
+        % type
+        0:8,
+        % op
+        ?RFKILL_OP_CHANGE_ALL:8,
+        % soft
+        Block:8,
+        % hard
+        0:8
     >>.
 
-event(<<?UINT32(Idx),
-    Type:8,
-    Op:8,
-    Soft:8,
-    Hard:8>>) ->
+event(<<?UINT32(Idx), Type:8, Op:8, Soft:8, Hard:8>>) ->
     #rfkill_event{
         idx = Idx,
         type = Type,
@@ -114,37 +120,35 @@ write_1(FD, Event) ->
     Result.
 
 decode({event, Event}) when is_list(Event) ->
-    [ decode(N) || N <- Event ];
-
-decode({state, Type}) -> {state, state(Type)};
-decode({op, Type}) -> {op, op(Type)};
-decode({type, Type}) -> {type, type(Type)};
+    [decode(N) || N <- Event];
+decode({state, Type}) ->
+    {state, state(Type)};
+decode({op, Type}) ->
+    {op, op(Type)};
+decode({type, Type}) ->
+    {type, type(Type)};
 decode({Block, ?BLOCK}) when Block == soft; Block == hard ->
     {Block, true};
 decode({Block, ?UNBLOCK}) when Block == soft; Block == hard ->
     {Block, false};
-decode({_,_} = N) -> N.
-
+decode({_, _} = N) ->
+    N.
 
 state(soft_blocked) -> ?RFKILL_STATE_SOFT_BLOCKED;
 state(unblocked) -> ?RFKILL_STATE_UNBLOCKED;
 state(hard_blocked) -> ?RFKILL_STATE_HARD_BLOCKED;
-
 state(?RFKILL_STATE_SOFT_BLOCKED) -> soft_blocked;
 state(?RFKILL_STATE_UNBLOCKED) -> unblocked;
 state(?RFKILL_STATE_HARD_BLOCKED) -> hard_blocked.
-
 
 op(add) -> ?RFKILL_OP_ADD;
 op(del) -> ?RFKILL_OP_DEL;
 op(change) -> ?RFKILL_OP_CHANGE;
 op(change_all) -> ?RFKILL_OP_CHANGE_ALL;
-
 op(?RFKILL_OP_ADD) -> add;
 op(?RFKILL_OP_DEL) -> del;
 op(?RFKILL_OP_CHANGE) -> change;
 op(?RFKILL_OP_CHANGE_ALL) -> change_all.
-
 
 type(all) -> ?RFKILL_TYPE_ALL;
 type(wlan) -> ?RFKILL_TYPE_WLAN;
@@ -154,7 +158,6 @@ type(wimax) -> ?RFKILL_TYPE_WIMAX;
 type(wwan) -> ?RFKILL_TYPE_WWAN;
 type(gps) -> ?RFKILL_TYPE_GPS;
 type(fm) -> ?RFKILL_TYPE_FM;
-
 type(?RFKILL_TYPE_ALL) -> all;
 type(?RFKILL_TYPE_WLAN) -> wlan;
 type(?RFKILL_TYPE_BLUETOOTH) -> bluetooth;

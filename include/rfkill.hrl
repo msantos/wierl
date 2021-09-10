@@ -1,4 +1,4 @@
-%% Copyright (c) 2012-2015, Michael Santos <michael.santos@gmail.com>
+%% Copyright (c) 2012-2021, Michael Santos <michael.santos@gmail.com>
 %% All rights reserved.
 %%
 %% Redistribution and use in source and binary forms, with or without
@@ -57,9 +57,9 @@
 %%     __u8  soft, hard;
 %% } __packed;
 -record(rfkill_event, {
-        idx = 0,
-        type = 0,
-        op = 0,
-        soft = 0,
-        hard = 0
-    }).
+    idx = 0,
+    type = 0,
+    op = 0,
+    soft = 0,
+    hard = 0
+}).

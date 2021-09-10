@@ -1,4 +1,4 @@
-%% Copyright (c) 2011-2015, Michael Santos <michael.santos@gmail.com>
+%% Copyright (c) 2011-2021, Michael Santos <michael.santos@gmail.com>
 %% All rights reserved.
 %%
 %% Redistribution and use in source and binary forms, with or without
@@ -30,16 +30,15 @@
 %% POSSIBILITY OF SUCH DAMAGE.
 -module(wierl_scan).
 -export([
-        list/0, list/1, list/2
-    ]).
+    list/0, list/1, list/2
+]).
 
 -include("wierl.hrl").
 
 -record(state, {
-        ap,
-        aps
-    }).
-
+    ap,
+    aps
+}).
 
 %%
 %% Open an unprivileged, datagram socket using
@@ -47,10 +46,13 @@
 %%
 list() ->
     {ok, Devs} = inet:getifaddrs(),
-    [ begin
-                N = list_to_binary(Dev),
-                {N, list(N)}
-        end || {Dev,_} <- Devs ].
+    [
+        begin
+            N = list_to_binary(Dev),
+            {N, list(N)}
+        end
+     || {Dev, _} <- Devs
+    ].
 
 list(Dev) ->
     list(Dev, []).
@@ -61,7 +63,6 @@ list(Dev, Opt) when is_binary(Dev), is_list(Opt) ->
     Result = scan(Socket, Dev, ESSID),
     procket:close(Socket),
     Result.
-
 
 %%
 %% Initiate the scan
@@ -78,17 +79,16 @@ scan(Socket, Dev, ESSID) when byte_size(Dev) < ?IFNAMSIZ ->
             Error
     end.
 
-
 %%
 %% Retrieve the scan results by specifying a buffer for the
 %% kernel to return the results
 %%
 ap(Socket, Dev) ->
     {ok, Req, [Res]} = procket:alloc([
-            <<Dev/bytes, 0:( (?IFNAMSIZ - byte_size(Dev))*8)>>,
-            {ptr, 4096},
-            <<?UINT16(4096), ?UINT16(0)>>
-        ]),
+        <<Dev/bytes, 0:((?IFNAMSIZ - byte_size(Dev)) * 8)>>,
+        {ptr, 4096},
+        <<?UINT16(4096), ?UINT16(0)>>
+    ]),
 
     Pointer = erlang:system_info({wordsize, external}) * 8,
 
@@ -103,46 +103,67 @@ ap(Socket, Dev) ->
             Pad = (4096 - Len) * 8,
             {ok, <<Stream:Len/bytes, 0:Pad>>} = procket:buf(Res),
             event(Stream);
-
         % Poll the socket for the results
         {error, eagain} ->
             timer:sleep(1000),
             ap(Socket, Dev);
-
         {error, _} = Error ->
             Error
     end.
 
-
 essid(Dev, undefined) ->
-    <<Dev/binary, 0:((?IFNAMSIZ - byte_size(Dev))*8), 0:(16*8)>>;
+    <<Dev/binary, 0:((?IFNAMSIZ - byte_size(Dev)) * 8), 0:(16 * 8)>>;
 essid(Dev, ESSID) when is_binary(ESSID), byte_size(ESSID) < ?IW_ESSID_MAX_SIZE ->
     Len = byte_size(ESSID),
 
     ScanReq = <<
-    0:8,                        % scan_type: IW_SCAN_TYPE_ACTIVE
-    Len:8,                      % essid_len
-    0:8,                        % num entries in channel list: scan all
-    0:8,                        % flags: unused
+        % scan_type: IW_SCAN_TYPE_ACTIVE
+        0:8,
+        % essid_len
+        Len:8,
+        % num entries in channel list: scan all
+        0:8,
+        % flags: unused
+        0:8,
 
-    % struct sockaddr bssid
-    ?ARPHRD_ETHER:16/native,    % family
-    255,255,255,255,255,255,    % sa_data: ff:ff:ff:ff:ff:ff
-    0:64,                       % sa_data: zero remainder
+        % struct sockaddr bssid
 
-    ESSID/bytes, 0:((?IW_ESSID_MAX_SIZE - Len)*8),
+        % family
+        ?ARPHRD_ETHER:16/native,
+        % sa_data: ff:ff:ff:ff:ff:ff
+        255,
+        255,
+        255,
+        255,
+        255,
+        255,
+        % sa_data: zero remainder
+        0:64,
 
-    0:32/native,                % min_channel_time: use defaults
-    0:32/native                 % max_channel_time: use defaults
+        ESSID/bytes,
+        0:((?IW_ESSID_MAX_SIZE - Len) * 8),
+
+        % min_channel_time: use defaults
+        0:32/native,
+        % max_channel_time: use defaults
+        0:32/native
     >>,
 
-    Freq = binary:copy(<<
-        % struct iw_freq channel_list[IW_MAX_FREQUENCIES]
-        0:32/native,                % mantissa
-        0:16/native,                % exponent
-        0:8,                        % list index
-        0:8                         % flags
-        >>, 32),
+    Freq = binary:copy(
+        <<
+            % struct iw_freq channel_list[IW_MAX_FREQUENCIES]
+
+            % mantissa
+            0:32/native,
+            % exponent
+            0:16/native,
+            % list index
+            0:8,
+            % flags
+            0:8
+        >>,
+        32
+    ),
 
     Struct = list_to_binary([ScanReq, Freq]),
 
@@ -150,12 +171,11 @@ essid(Dev, ESSID) when is_binary(ESSID), byte_size(ESSID) < ?IW_ESSID_MAX_SIZE -
     % XXX return value of the resource, the garbage collector
     % XXX may destroy the resource and free the buffer.
     {ok, Req, [_Res]} = procket:alloc([
-        <<Dev/bytes, 0:( (?IFNAMSIZ - byte_size(Dev))*8)>>,
+        <<Dev/bytes, 0:((?IFNAMSIZ - byte_size(Dev)) * 8)>>,
         {ptr, Struct},
         <<?UINT16((byte_size(Struct))), ?UINT16(?IW_SCAN_THIS_ESSID)>>
     ]),
     Req.
-
 
 % The events are returned in the form: length, command, data
 % (length bytes)
@@ -164,8 +184,8 @@ essid(Dev, ESSID) when is_binary(ESSID), byte_size(ESSID) < ?IW_ESSID_MAX_SIZE -
 % the binary data. If the length is wrong, we'll just crash.
 event(Buf) ->
     event(Buf, #state{
-            aps = gb_trees:empty()
-        }).
+        aps = gb_trees:empty()
+    }).
 
 % struct iw_event {
 %    __u16       len;
@@ -173,23 +193,23 @@ event(Buf) ->
 %    union iwreq_data    u;
 % }
 event(<<>>, #state{aps = APs}) ->
-    [ {AP, orddict:to_list(N)} || {AP, N} <- gb_trees:to_list(APs) ];
+    [{AP, orddict:to_list(N)} || {AP, N} <- gb_trees:to_list(APs)];
 event(<<?UINT16(EventLen), ?UINT16(Cmd), Buf/binary>>, #state{ap = AP, aps = APs}) ->
-    Pad = procket:wordalign(2+2) * 8,
+    Pad = procket:wordalign(2 + 2) * 8,
     Len = EventLen - 4 - Pad div 8,
     <<0:Pad, Event:Len/bytes, Rest/binary>> = Buf,
 
     case wierl:cmd(Cmd) of
         ap ->
             event(Rest, #state{
-                    ap = Event,
-                    aps = gb_trees:enter(Event, orddict:new(), APs)
-                });
+                ap = Event,
+                aps = gb_trees:enter(Event, orddict:new(), APs)
+            });
         Type ->
             Info = gb_trees:get(AP, APs),
             Info1 = orddict:store(Type, Event, Info),
             event(Rest, #state{
-                    ap = AP,
-                    aps = gb_trees:enter(AP, Info1, APs)
-                })
+                ap = AP,
+                aps = gb_trees:enter(AP, Info1, APs)
+            })
     end.

@@ -1,4 +1,4 @@
-%% Copyright (c) 2011-2015, Michael Santos <michael.santos@gmail.com>
+%% Copyright (c) 2011-2021, Michael Santos <michael.santos@gmail.com>
 %% All rights reserved.
 %%
 %% Redistribution and use in source and binary forms, with or without
@@ -34,13 +34,13 @@
 %%
 -module(wierl_prism).
 -export([
-        header/1
-    ]).
+    header/1
+]).
 
 -include("wierl.hrl").
 -include("wierl_frame.hrl").
 
--define(PRISM_VALUE, (4+2+2+4)/bytes).
+-define(PRISM_VALUE, (4 + 2 + 2 + 4) / bytes).
 
 %%-------------------------------------------------------------------------
 %%% PRISM header
@@ -65,9 +65,10 @@ header(<<
     Istx:?PRISM_VALUE,
     Frmlen:?PRISM_VALUE,
 
-    Frame/binary>>) ->
-
-    {#ieee802_11_prism{
+    Frame/binary
+>>) ->
+    {
+        #ieee802_11_prism{
             msgcode = Msgcode,
             msglen = Msglen,
             devname = Devname,
@@ -81,54 +82,50 @@ header(<<
             rate = prism_value(Rate),
             istx = prism_value(Istx),
             frmlen = prism_value(Frmlen)
-        }, Frame};
+        },
+        Frame
+    };
 header(#ieee802_11_prism{
-        msgcode = Msgcode,
-        msglen = Msglen,
-        devname = Devname,
-        hosttime = Hosttime,
-        mactime = Mactime,
-        channel = Channel,
-        rssi = Rssi,
-        sq = Sq,
-        signal = Signal,
-        noise = Noise,
-        rate = Rate,
-        istx = Istx,
-        frmlen = Frmlen
-    }) ->
-
-
+    msgcode = Msgcode,
+    msglen = Msglen,
+    devname = Devname,
+    hosttime = Hosttime,
+    mactime = Mactime,
+    channel = Channel,
+    rssi = Rssi,
+    sq = Sq,
+    signal = Signal,
+    noise = Noise,
+    rate = Rate,
+    istx = Istx,
+    frmlen = Frmlen
+}) ->
     list_to_binary([
-            <<?UINT32(Msgcode),
-            ?UINT32(Msglen),
-            (devname(Devname))/bytes>>,
+        <<?UINT32(Msgcode), ?UINT32(Msglen), (devname(Devname))/bytes>>,
 
-            rec_to_bin(Hosttime),
-            rec_to_bin(Mactime),
-            rec_to_bin(Channel),
-            rec_to_bin(Rssi),
-            rec_to_bin(Sq),
-            rec_to_bin(Signal),
-            rec_to_bin(Noise),
-            rec_to_bin(Rate),
-            rec_to_bin(Istx),
-            rec_to_bin(Frmlen)
-        ]).
-
+        rec_to_bin(Hosttime),
+        rec_to_bin(Mactime),
+        rec_to_bin(Channel),
+        rec_to_bin(Rssi),
+        rec_to_bin(Sq),
+        rec_to_bin(Signal),
+        rec_to_bin(Noise),
+        rec_to_bin(Rate),
+        rec_to_bin(Istx),
+        rec_to_bin(Frmlen)
+    ]).
 
 rec_to_bin(Value) when is_binary(Value) ->
     Value;
 rec_to_bin(#prism_value{} = Value) ->
     prism_value(Value).
 
-
 prism_value(<<
     ?UINT32(Did),
     ?UINT16(Status),
     ?UINT16(Len),
     ?UINT32(Data)
-    >>) ->
+>>) ->
     #prism_value{
         did = Did,
         status = Status,
@@ -136,20 +133,20 @@ prism_value(<<
         data = Data
     };
 prism_value(#prism_value{
-        did = Did,
-        status = Status,
-        len = Len,
-        data = Data
-    }) ->
+    did = Did,
+    status = Status,
+    len = Len,
+    data = Data
+}) ->
     <<
-    ?UINT32(Did),
-    ?UINT16(Status),
-    ?UINT16(Len),
-    ?UINT32(Data)
+        ?UINT32(Did),
+        ?UINT16(Status),
+        ?UINT16(Len),
+        ?UINT32(Data)
     >>.
 
 % Pad the device name to IFNAMSIZ bytes
 devname(Dev) when byte_size(Dev) == 16 ->
     Dev;
 devname(Dev) when byte_size(Dev) < 16 ->
-    <<Dev/bytes, 0:((16-(byte_size(Dev)))*8)>>.
+    <<Dev/bytes, 0:((16 - (byte_size(Dev))) * 8)>>.
