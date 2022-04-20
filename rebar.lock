@@ -1,4 +1,8 @@
-[{<<"procket">>,
-  {git,"git://github.com/msantos/procket.git",
-       {ref,"f531b951b884972b6eaa619e66113280d79c7830"}},
-  0}].
+{"1.2.0",
+[{<<"procket">>,{pkg,<<"procket">>,<<"0.9.6">>},0}]}.
+[
+{pkg_hash,[
+ {<<"procket">>, <<"467014637052CAB030DD32D5269591B82763420C9572F61CD6C5657FE4579777">>}]},
+{pkg_hash_ext,[
+ {<<"procket">>, <<"037287B8D10A747E54A69BDCE56724ECC8BE12BCB8233AE4D6F885F0ED71E895">>}]}
+].
